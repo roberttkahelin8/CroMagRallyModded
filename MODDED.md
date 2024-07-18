@@ -15,7 +15,7 @@ Since we're working with C, some things aren't possible without extra libraries 
 - Bone Bombs, Oil, and the other non-candle/rocket items give you a random amount between 2-3, or 5-7, etc.-etc., depending on RNG.
 - Submarine turns into a plane in normal levels (doesn't look like one, but does remove bubble particles) and if you collect anything but nitro, the item is a SUPER BURST, giving you a 1 of each; Roman Candles, Bottle Rockets, and Torpedos, which can hit CPUs in non-sub vehicles.
 - Terrain is coord stretched horizontally (not vertically to not ruin the vertical stretch physics feature), and CPUs can drive on it no problem. The track is now wider and longer.
-- Nitro now boosts you more if your in a Submarine on a non-Atlantis track, and Sticky Tires/Super Suspension give you a tiny boost of speed (non-nitro speed).
+- Nitro now boosts you more if your in a Submarine on a non-Atlantis track, and Sticky Tires/Super Suspension give you a tiny boost of speed (non-nitro speed, depending on the number of seconds shown).
 - Some previously static objects now dance or move to make the scene a little more active, but not too distracting. For example, the trees now stretch up and down smoothly to look like they are moving in the wind.
 
 ## Here's a list of the brand new features:
