@@ -26,4 +26,5 @@ Since we're working with C, some things aren't possible without extra libraries 
 ## Here's a list of the brand new features:
 - Zapped Player State (has no proper icon yet); when zapped, you will turn small and move much slower than your usual speed. When the timer runs out, you will regain your original speed and size.
 - Night Mode (WIP); selected tracks will have a night time lighting and coloring option. The skybox, terrain and objects will be shaded and have an alternative appearance (it is currently working but is not synced nor is 'night' in the sense of lighting/dark shadows, as the custom C code and the OpenGL-like system doesn't have good support for dynamic lights, that are needed for full effect, and such).
-- Fog is enabled in particular levels depending on how good fog looks in the level.
+- Fog is enabled in particular levels depending on how good fog looks in the level (was disabled entirely in the whole game)
+- Fast Music on Lap 3+ (will change if others are in 3rd lap as well)
