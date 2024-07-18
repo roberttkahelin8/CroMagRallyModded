@@ -9,7 +9,8 @@ This is a port of Pangea Software’s racing game **Cro-Mag Rally** to modern op
 
 **Download the game for macOS, Windows and Linux here:** https://github.com/jorio/CroMagRally/releases
 
-![Cro-Mag Rally Screenshot](docs/screenshot.webp)
+![Cro-Mag Rally Screenshot](docs/nightmode_prelim1snow.png)
+
 
 ## About Cro-Mag Rally
 
