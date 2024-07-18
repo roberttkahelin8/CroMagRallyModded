@@ -1,4 +1,5 @@
-Original code by Pangea Software, ported by Iliyas Jorio under permission, modded in 2024 to add and enhance features by rk8!
+Original code by Pangea Software, ported by Iliyas Jorio under permission. Port was modded in 2024 to add and enhance features by rk8!
+More mod information is in the MODDED.md file.
 
 # Cro-Mag Rally
 
