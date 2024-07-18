@@ -1,3 +1,5 @@
+Original code by Pangea Software, ported by Iliyas Jorio under permission, modded in 2024 to add and enhance features by rk8!
+
 # Cro-Mag Rally
 
 ## *The wildest racing game since man invented the wheel!*
