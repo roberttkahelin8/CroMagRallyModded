@@ -28,3 +28,14 @@ Since we're working with C, some things aren't possible without extra libraries 
 - Night Mode (WIP); selected tracks will have a night time lighting and coloring option. The skybox, terrain and objects will be shaded and have an alternative appearance (it is currently working but is not synced nor is 'night' in the sense of lighting/dark shadows, as the custom C code and the OpenGL-like system doesn't have good support for dynamic lights, that are needed for full effect, and such).
 - Fog is enabled in particular levels depending on how good fog looks in the level (was disabled entirely in the whole game)
 - Fast Music on Lap 3+ (will change if others are in 3rd lap as well)
+- Completed race music (will use title theme but altered a bit, WIP)
+
+# List Of Potential Fixes:
+- Unknown object types will be corrected if possible, if not, the objects will still cause errors, due to there being no replacement for them
+- Odd behaviors (that seemed like bugs) in the original game will be changed to be more intentional/removed/fixed rather than a bug (such as clipping when not correct, or odd hitboxes)
+- Crete finish line increased size and hitbox (matched up using debugger features, hitbox is not blocking more road, rather resized to new model scale)
+- Objects that weren't lit using lighting effects in OpenGL now use lighting effects when appropriate (such as objects in day mode not using light effects vs night mode where they do need light effects).
+
+Note:
+If you want to help make the mod better, please report anything related to: "Bad Races, Difficulty changes, Options Within Bounds Of OpenGL For C", "Bugs/Crashes", "Strange behaviors".
+**Do not report mod suggestions/issues/bugs to the original GitHub that Jorio has made, as that port is for official changes only, which may propagate if they add features or fix critical issues, or optimize the game more.**
