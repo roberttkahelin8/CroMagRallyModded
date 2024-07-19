@@ -29,6 +29,7 @@ Since we're working with C, some things aren't possible without extra libraries 
 - Fog is enabled in particular levels depending on how good fog looks in the level (was disabled entirely in the whole game)
 - Fast Music on Lap 3+ (will change if others are in 3rd lap as well)
 - Completed race music (will use title theme but altered a bit, WIP)
+- Zapper Item (collected only from Arrowheads in non-tournament modes) (zaps only players/CPUs who did not fire the zapper for 5 seconds, if user who fired zapper is already zapped, their zapper timer will be reset to 0)
 
 # List Of Potential Fixes:
 - Unknown object types will be corrected if possible, if not, the objects will still cause errors, due to there being no replacement for them (remember that 'objects' is a relative term as there are no real objects in C)
