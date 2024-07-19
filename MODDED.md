@@ -31,7 +31,7 @@ Since we're working with C, some things aren't possible without extra libraries 
 - Completed race music (will use title theme but altered a bit, WIP)
 
 # List Of Potential Fixes:
-- Unknown object types will be corrected if possible, if not, the objects will still cause errors, due to there being no replacement for them
+- Unknown object types will be corrected if possible, if not, the objects will still cause errors, due to there being no replacement for them (remember that 'objects' is a relative term as there are no real objects in C)
 - Odd behaviors (that seemed like bugs) in the original game will be changed to be more intentional/removed/fixed rather than a bug (such as clipping when not correct, or odd hitboxes)
 - Crete finish line increased size and hitbox (matched up using debugger features, hitbox is not blocking more road, rather resized to new model scale)
 - Objects that weren't lit using lighting effects in OpenGL now use lighting effects when appropriate (such as objects in day mode not using light effects vs night mode where they do need light effects).
