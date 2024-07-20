@@ -31,11 +31,13 @@ Since we're working with C, some things aren't possible without extra libraries 
 - Completed race music (will use title theme but altered a bit, WIP)
 - Zapper Item (collected only from Arrowheads in non-tournament modes) (zaps only players/CPUs who did not fire the zapper for 5 seconds, if user who fired zapper is already zapped, their zapper timer will be reset to 0)
 
-# List Of Potential Fixes:
+# List Of Potential Fixes/Technical Changes:
 - Unknown object types will be corrected if possible, if not, the objects will still cause errors, due to there being no replacement for them (remember that 'objects' is a relative term as there are no real objects in C)
 - Odd behaviors (that seemed like bugs) in the original game will be changed to be more intentional/removed/fixed rather than a bug (such as clipping when not correct, or odd hitboxes)
 - Crete finish line increased size and hitbox (matched up using debugger features, hitbox is not blocking more road, rather resized to new model scale)
 - Objects that weren't lit using lighting effects in OpenGL now use lighting effects when appropriate (such as objects in day mode not using light effects vs night mode where they do need light effects).
+- Hitbox tweaks to 'token', a.k.a Arrowhead used in tournament gamemode.
+- More sound channels as original amount was too low for certain circumstances, cutting out sounds that weren't supposed to be cut out at all (20 -> 60 channels).
 
 Note:
 If you want to help make the mod better, please report anything related to: "Bad Races, Difficulty changes, Options Within Bounds Of OpenGL For C", "Bugs/Crashes", "Strange behaviors".
