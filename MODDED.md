@@ -25,7 +25,7 @@ Since we're working with C, some things aren't possible without extra libraries 
 
 ## Here's a list of the brand new features:
 - Zapped Player State (has no proper icon yet); when zapped, you will turn small and move much slower than your usual speed. When the timer runs out, you will regain your original speed and size.
-- Night Mode (WIP); selected tracks will have a night time lighting and coloring option. The skybox, terrain and objects will be shaded and have an alternative appearance (it is currently working but is not synced nor is 'night' in the sense of lighting/dark shadows, as the custom C code and the OpenGL-like system doesn't have good support for dynamic lights, that are needed for full effect, and such).
+- Night Mode (WIP); selected tracks will have a night time/sunset lighting and coloring option (and sometimes level changes to objects). The skybox, terrain and objects will be shaded and have an alternative appearance (it is currently working but is not synced nor is 'night' in the sense of lighting/dark shadows, as the custom C code and the OpenGL-like system doesn't have good support for dynamic lights, that are needed for full effect, and such).
 - Fog is enabled in particular levels depending on how good fog looks in the level (was disabled entirely in the whole game)
 - Fast Music on Lap 3+ (will change if others are in 3rd lap as well)
 - Completed race music (will use title theme but altered a bit, WIP)
@@ -38,6 +38,13 @@ Since we're working with C, some things aren't possible without extra libraries 
 - Objects that weren't lit using lighting effects in OpenGL now use lighting effects when appropriate (such as objects in day mode not using light effects vs night mode where they do need light effects).
 - Hitbox tweaks to 'token', a.k.a Arrowhead used in tournament gamemode.
 - More sound channels as original amount was too low for certain circumstances, cutting out sounds that weren't supposed to be cut out at all (20 -> 60 channels).
+  
+# List of potential future changes, if possible:
+- Potential for objects to be more in line with C++? (there is some code already from the port that uses real classes and object-like stuff).
+- Levels could be loaded from non-.ter (these can contain terrain and textures according to some research) and non-.ter.rsrc (other terrain resources, or Macintosh Resource Forks type) files.
+- BG3D models/skeletons/animations can be exported using scripts (and are usually converted into multi-model files with some attributes and custom data, perhaps the original files are packed as well), but not imported as there is no other known way to make them without Maya 6 and a custom plugin (according to Pangea Software Game Making Book). Perhaps add support for .obj or .dae files, as they are fairly old enough to perhaps be converted on the fly to bg3d... unsure, needs more testing.
+- Some way to load all game textures outside of atlases, as atlases are good for old computers and compression, but bad as they are hardly expandable. If a computer has plenty of space, shouldn't an atlas be *made after* the textures are *all identified and can be referenced*? (look into other games and how they stitch individual textures in one singular atlas for the game to use).
+- Support for more compressed/alternative formats (game supports PNGs/JPGS for sprites/screen bgs, and AIFFs for all sfx and music already, which is good, perhaps expand this support to other formats/find out what formats are in BG3D files for their textures natively? (TGAs were the converted texture format using python scripts)).
 
 Note:
 If you want to help make the mod better, please report anything related to: "Bad Races, Difficulty changes, Options Within Bounds Of OpenGL For C", "Bugs/Crashes", "Strange behaviors".
