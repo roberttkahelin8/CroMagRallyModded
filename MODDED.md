@@ -38,6 +38,7 @@ Since we're working with C, some things aren't possible without extra libraries 
 - Objects that weren't lit using lighting effects in OpenGL now use lighting effects when appropriate (such as objects in day mode not using light effects vs night mode where they do need light effects).
 - Hitbox tweaks to 'token', a.k.a Arrowhead used in tournament gamemode.
 - More sound channels as original amount was too low for certain circumstances, cutting out sounds that weren't supposed to be cut out at all (20 -> 60 channels).
+- Player ID's are assigned at the start of a race, so this value is stored within the player's info so that more complex features can be created for players.
   
 # List of potential future changes, if possible:
 - Potential for objects to be more in line with C++? (there is some code already from the port that uses real classes and object-like stuff).
