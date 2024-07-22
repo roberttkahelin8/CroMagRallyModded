@@ -24,6 +24,9 @@ static uint16_t	BuildTerrainSuperTile(long	startCol, long startRow);
 static void ReleaseAllSuperTiles(void);
 
 
+static bool lightShadedTerrain = false;
+
+
 /****************************/
 /*    CONSTANTS             */
 /****************************/
@@ -787,8 +790,31 @@ uint32_t			pictRowBytes;
 		/* SET A NICE STATE FOR TERRAIN DRAWING */
 
 	OGL_PushState();
+    
+    // shade terrain based on light values of OGL and if the track selected needs it, also check night mode as it is global controller
+    if(gGamePrefs.nightMode == true){
+        if(gTrackNum == TRACK_NUM_ICE){
+            lightShadedTerrain = true;
+        }
+        else if(gTrackNum == TRACK_NUM_EGYPT){
+            lightShadedTerrain = true;
+        }
+        else if(gTrackNum == TRACK_NUM_ATLANTIS){
+            lightShadedTerrain = true;
+        }
+        else{
+            lightShadedTerrain = false;
+        }
+    }
+    else{
+        lightShadedTerrain = false;
+    }
 
-	OGL_DisableLighting();												// Turn OFF lights since we've prelit terrain
+    // mod: turn on lights
+    if(!lightShadedTerrain){
+        OGL_DisableLighting();
+    }
+    
   	glDisable(GL_NORMALIZE);											// turn off vector normalization since scale == 1
     glDisable(GL_BLEND);												// no blending for terrain - its always opaque
 
