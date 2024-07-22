@@ -39,6 +39,8 @@ PlayerInfoType	gPlayerInfo[MAX_PLAYERS];
 
 OGLColorRGB	gTagColor;
 
+bool super_sub_mode = false; // enable super sub mode for non-water tracks for fun
+
 /******************** INIT PLAYER INFO ***************************/
 //
 // Called once at beginning of game (after network has been setup if needed).
@@ -158,6 +160,10 @@ int		i,j,type;
 Boolean	taken[NUM_LAND_CAR_TYPES];
 
 	gWorstHumanPlace = 0;
+    
+    for(i = 0; i < gNumTotalPlayers; i++){
+        gPlayerInfo[i].playerID = i;
+    }
 
 
 		/* FIRST MARK WHICH CAR TYPES THE HUMANS HAVE */
@@ -184,12 +190,31 @@ Boolean	taken[NUM_LAND_CAR_TYPES];
 
 	for (i = 0; i < gNumTotalPlayers; i++)
 	{
-		if (gPlayerInfo[i].isComputer)									// set CPU vehicle type
-		{
-			if (gGamePrefs.difficulty == DIFFICULTY_HARD)				// in hard mode, the CPU can have duplicate cars
-				gPlayerInfo[i].vehicleType = RandomRange(0, type);
-			else														// in other difficulty modes, only choose unique cars
-			{
+        // mod: set CPU vehicle types per difficulty
+        // mod: allow CPU vehicles to be cheatsy more often to give them an advantage due to bad AI logic
+		if (gPlayerInfo[i].isComputer){
+            gPlayerInfo[i].carStats = gPlayerInfo[i].carStatsCopy; // reset every time cars for CPUs are picked
+            
+            if (gGamePrefs.difficulty == DIFFICULTY_HARD){
+                gPlayerInfo[i].vehicleType = RandomRange(6, type); // duplicate cars
+                // modify the CPU's cars to be more fun
+                gPlayerInfo[i].carStats.acceleration += RandomRange(7,15);
+                gPlayerInfo[i].carStats.maxSpeed += RandomRange(11,32);
+                gPlayerInfo[i].carStats.suspension += RandomRange(2,5);
+                gPlayerInfo[i].carStats.tireTraction += RandomRange(3,11);
+            }
+            else if(gGamePrefs.difficulty == DIFFICULTY_MEDIUM){
+                gPlayerInfo[i].vehicleType = RandomRange(3, type); // only level 3+ cars allowed
+                gPlayerInfo[i].carStats.suspension += RandomRange(2,5);
+                gPlayerInfo[i].carStats.tireTraction += RandomRange(3,11);
+            }
+            else if(gGamePrefs.difficulty == DIFFICULTY_EASY){
+                gPlayerInfo[i].vehicleType = RandomRange(0, 5); // only simplistic to level 5 cars allowed
+            }
+            else if(gGamePrefs.difficulty == DIFFICULTY_SIMPLISTIC){
+                gPlayerInfo[i].vehicleType = RandomRange(0, 1); // only the first 2 simplistic cars allowed
+            } // mod: not sure how you'd get another difficulty mode, but if so, pick vehicles that haven't been taken yet...
+			else{
 				while(taken[type])										// skip over vehicles already used by Humans
 					type--;
 
@@ -204,7 +229,28 @@ Boolean	taken[NUM_LAND_CAR_TYPES];
 		if (gTrackNum == TRACK_NUM_ATLANTIS)
 			InitPlayer_Submarine(i, &gPlayerInfo[i].coord, gPlayerInfo[i].startRotY);
 		else
-			InitPlayer_Car(i, &gPlayerInfo[i].coord, gPlayerInfo[i].startRotY);
+            //InitPlayer_Car(i, &gPlayerInfo[i].coord, gPlayerInfo[i].startRotY);
+            // joke lolz
+            if(!gIsSelfRunningDemo){
+                if(super_sub_mode){
+                    if(!gPlayerInfo[i].isComputer){
+                        InitPlayer_Submarine(i, &gPlayerInfo[i].coord, gPlayerInfo[i].startRotY);
+                        gPlayerInfo[i].vehicleType = CAR_TYPE_SUB;
+                    }
+                    else{
+                        InitPlayer_Car(i, &gPlayerInfo[i].coord, gPlayerInfo[i].startRotY);
+                    }
+                }
+                else{
+                    InitPlayer_Car(i, &gPlayerInfo[i].coord, gPlayerInfo[i].startRotY);
+                }
+            }
+            else{
+                InitPlayer_Car(i, &gPlayerInfo[i].coord, gPlayerInfo[i].startRotY);
+            }
+        // moving on...
+        
+        gPlayerInfo[i].canMoveEarly = false;
 
 		gPlayerInfo[i].objNode->InvincibleTimer = 0;
 
@@ -247,6 +293,7 @@ Boolean	taken[NUM_LAND_CAR_TYPES];
 		gPlayerInfo[i].currentRPM		= 0;
 		gPlayerInfo[i].submarineImmobilized = 0;
 		gPlayerInfo[i].bumpSoundTimer	= 0;
+        gPlayerInfo[i].submarineAdditionalSpeed = 0;
 
 			/* DRAG DEBRIS */
 
@@ -280,6 +327,7 @@ Boolean	taken[NUM_LAND_CAR_TYPES];
 		gPlayerInfo[i].superSuspensionTimer	= 0;
 		gPlayerInfo[i].numTokens			= 0;
 		gPlayerInfo[i].invisibilityTimer	= 0;
+        gPlayerInfo[i].zappedTimer          = 0; // reset zapped timer INIT
 		gPlayerInfo[i].flamingTimer			= 0;
 
 				/* BATTLE MODES */
@@ -321,7 +369,7 @@ Boolean	taken[NUM_LAND_CAR_TYPES];
 		gPlayerInfo[i].camera.upVector.y = 1;
 		gPlayerInfo[i].camera.upVector.z = 0;
 
-		gPlayerInfo[i].cameraMode = CAMERA_MODE_NORMAL1;
+		gPlayerInfo[i].cameraMode = CAMERA_MODE_NORMAL1 + 1; // init camera mode
 
 
 			/* AI */
@@ -705,9 +753,12 @@ void PlayerLoseHealth(short p, float damage)
 void SetStickyTires(short playerNum)
 {
 	SetTractionPhysics(&gPlayerInfo[playerNum].carStats, 3.0);
-	gPlayerInfo[playerNum].stickyTiresTimer = 20.0;				// set duration of sticky tires
-
-
+    if(gPlayerInfo[playerNum].stickyTiresTimer <= 0.0f){
+        gPlayerInfo[playerNum].stickyTiresTimer = RandomRange(10,20);                // set duration of sticky tires
+    }
+    else{
+        gPlayerInfo[playerNum].stickyTiresTimer += 5.0;
+    }
 }
 
 /******************** SET SUSPENSION POW *************************/
@@ -715,9 +766,12 @@ void SetStickyTires(short playerNum)
 void SetSuspensionPOW(short playerNum)
 {
 	SetSuspensionPhysics(&gPlayerInfo[playerNum].carStats, 3.0);
-	gPlayerInfo[playerNum].superSuspensionTimer = 20.0;				// set duration
-
-
+    if(gPlayerInfo[playerNum].superSuspensionTimer <= 0.0f){
+        gPlayerInfo[playerNum].superSuspensionTimer = RandomRange(10,20);       // set duration
+    }
+    else{
+        gPlayerInfo[playerNum].superSuspensionTimer += 5.0;                // set duration
+    }
 }
 
 
@@ -748,6 +802,17 @@ ObjNode *obj;
 		obj = obj->ChainNode;
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
