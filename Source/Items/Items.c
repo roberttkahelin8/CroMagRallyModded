@@ -39,20 +39,71 @@ static void MoveViking(ObjNode *theNode);
 ObjNode	*gCycloramaObj = nil;
 
 
-
-
 /********************* INIT ITEMS MANAGER *************************/
 
 void InitItemsManager(void)
 {
 int	i;
-
 	gCycloramaObj = CreateCyclorama();
 
 	for (i = 0; i < MAX_POW_TYPES; i++)
 		gAnnouncedPOW[i] = false;
 
 	gNumTorches = 0;
+}
+
+void MoveCycObject(ObjNode *theNode){
+    //theNode->Rot.z += gFramesPerSecondFrac * 3.0f;
+    if(gTrackNum == TRACK_NUM_ICE){
+        if(gGamePrefs.nightMode == true){
+            theNode->ColorFilter.r = 0.1f;
+            theNode->ColorFilter.g = 0.1f;
+            theNode->ColorFilter.b = 0.15f;
+            theNode->ColorFilter.a = 0.75f;
+        }
+        else{
+            theNode->ColorFilter.r = 1.0f;
+            theNode->ColorFilter.g = 1.0f;
+            theNode->ColorFilter.b = 1.0f;
+            theNode->ColorFilter.a = 1.0f;
+        }
+    }
+    else if(gTrackNum == TRACK_NUM_EGYPT){
+        if(gGamePrefs.nightMode == true){
+            theNode->ColorFilter.r = 0.95f;
+            theNode->ColorFilter.g = 0.92f;
+            theNode->ColorFilter.b = 0.05f;
+            theNode->ColorFilter.a = 0.98f;
+        }
+        else{
+            theNode->ColorFilter.r = 1.0f;
+            theNode->ColorFilter.g = 1.0f;
+            theNode->ColorFilter.b = 1.0f;
+            theNode->ColorFilter.a = 1.0f;
+        }
+    }
+    else if(gTrackNum == TRACK_NUM_ATLANTIS){
+        if(gGamePrefs.nightMode == true){
+            theNode->ColorFilter.r = 0.1f;
+            theNode->ColorFilter.g = 0.32f;
+            theNode->ColorFilter.b = 0.35f;
+            theNode->ColorFilter.a = 0.25f;
+        }
+        else{
+            theNode->ColorFilter.r = 1.0f;
+            theNode->ColorFilter.g = 1.0f;
+            theNode->ColorFilter.b = 1.0f;
+            theNode->ColorFilter.a = 1.0f;
+        }
+    }
+    else{
+        theNode->ColorFilter.r = 1.0f;
+        theNode->ColorFilter.g = 1.0f;
+        theNode->ColorFilter.b = 1.0f;
+        theNode->ColorFilter.a = 1.0f;
+    }
+    
+    UpdateObjectTransforms(theNode);
 }
 
 
@@ -70,9 +121,9 @@ ObjNode* CreateCyclorama(void)
 		.coord		= {0, 0, 0},
 		.flags		= STATUS_BIT_DONTCULL|STATUS_BIT_NOLIGHTING|STATUS_BIT_NOFOG,
 		.slot		= CYCLORAMA_SLOT,
-		.moveCall	= nil,
+		.moveCall	= MoveCycObject,
 		.rot		= 0,
-		.scale		= gGameView->yon * .99f,
+		.scale		= gGameView->yon * .99f, // was .99f
 	};
 
 	return MakeNewDisplayGroupObject(&def);
@@ -85,6 +136,23 @@ ObjNode* CreateCyclorama(void)
 
 
 
+void MoveFinishLineCreteObject(ObjNode *theNode)
+{
+    if (TrackTerrainItem(theNode))                            // just check to see if it's gone
+    {
+        DeleteObject(theNode);
+        return;
+    }
+    
+    if(gTrackNum == TRACK_NUM_CRETE){
+        theNode->Scale.x = 2.0;
+        theNode->Scale.y = 2.0;
+        theNode->Scale.z = 2.0;
+    }
+
+    UpdateObjectTransforms(theNode);
+    UpdateShadow(theNode);//prime
+}
 
 
 /************************* ADD FINISH LINE *********************************/
@@ -129,14 +197,15 @@ static const float diameter[] =
 };
 
 
+
 	NewObjectDefinitionType def =
 	{
 		.group 		= MODEL_GROUP_LEVELSPECIFIC,
 		.type 		= DESERT_ObjType_StartingLine,
 		.coord		= {x,0,z},	// y filled in below
-		.flags 		= STATUS_BIT_NOLIGHTING|gAutoFadeStatusBits,
+		.flags 		= gAutoFadeStatusBits, //had STATUS_BIT_NOLIGHTING |
 		.slot 		= 100,
-		.moveCall 	= MoveStaticObject,
+		.moveCall 	= MoveFinishLineCreteObject,
 		.rot 		= PI2 * ((float)itemPtr->parm[0] * (1.0f/8.0f)),
 		.scale 	    = 1,
 	};
@@ -158,38 +227,42 @@ static const float diameter[] =
 
 				newObj->CType 			= CTYPE_MISC;
 				newObj->CBits			= CBITS_ALLSOLID;
-
+                
+                // new collision
+                
+                float offsetMultiple = 2; // set to 1 if you want normal sized crete finish line collision
+            
 						/* BUILD 4 COLLISION BOXES */
 
 				AllocateCollisionBoxMemory(newObj, 4);								// alloc 4 collision boxes
 				boxPtr = newObj->CollisionBoxes;										// get ptr to boxes
-				boxPtr[0].left 		= x - 4030.0f;
-				boxPtr[0].right 	= x - 3517.0f;
-				boxPtr[0].top 		= y + 2000.0f;
-				boxPtr[0].bottom 	= y - 10.0f;
-				boxPtr[0].back 		= z - 1000.0f;
-				boxPtr[0].front 	= z + 1000.0f;
+				boxPtr[0].left 		= x - 4030.0f * offsetMultiple;
+				boxPtr[0].right 	= x - 3517.0f * offsetMultiple;
+				boxPtr[0].top 		= y + 2000.0f * offsetMultiple;
+				boxPtr[0].bottom 	= y - 10.0f * offsetMultiple;
+				boxPtr[0].back 		= z - 1000.0f * offsetMultiple;
+				boxPtr[0].front 	= z + 1000.0f * offsetMultiple;
 
-				boxPtr[1].left 		= x - 1674.0f;
-				boxPtr[1].right 	= x - 1233.0f;
-				boxPtr[1].top 		= y + 2000.0f;
-				boxPtr[1].bottom 	= y - 10.0f;
-				boxPtr[1].back 		= z - 1000.0f;
-				boxPtr[1].front 	= z + 1000.0f;
+				boxPtr[1].left 		= x - 1674.0f * offsetMultiple;
+				boxPtr[1].right 	= x - 1233.0f * offsetMultiple;
+				boxPtr[1].top 		= y + 2000.0f * offsetMultiple;
+				boxPtr[1].bottom 	= y - 10.0f * offsetMultiple;
+				boxPtr[1].back 		= z - 1000.0f * offsetMultiple;
+				boxPtr[1].front 	= z + 1000.0f * offsetMultiple;
 
-				boxPtr[2].left 		= x + 1233.0f;
-				boxPtr[2].right 	= x + 1674.0f;
-				boxPtr[2].top 		= y + 2000.0f;
-				boxPtr[2].bottom 	= y - 10.0f;
-				boxPtr[2].back 		= z - 1000.0f;
-				boxPtr[2].front 	= z + 1000.0f;
+				boxPtr[2].left 		= x + 1233.0f * offsetMultiple;
+				boxPtr[2].right 	= x + 1674.0f * offsetMultiple;
+				boxPtr[2].top 		= y + 2000.0f * offsetMultiple;
+				boxPtr[2].bottom 	= y - 10.0f * offsetMultiple;
+				boxPtr[2].back 		= z - 1000.0f * offsetMultiple;
+				boxPtr[2].front 	= z + 1000.0f * offsetMultiple;
 
-				boxPtr[3].left 		= x + 3517.0f;
-				boxPtr[3].right 	= x + 4030.0f;
-				boxPtr[3].top 		= y + 2000.0f;
-				boxPtr[3].bottom 	= y - 10.0f;
-				boxPtr[3].back 		= z - 1000.0f;
-				boxPtr[3].front 	= z + 1000.0f;
+				boxPtr[3].left 		= x + 3517.0f * offsetMultiple;
+				boxPtr[3].right 	= x + 4030.0f * offsetMultiple;
+				boxPtr[3].top 		= y + 2000.0f * offsetMultiple;
+				boxPtr[3].bottom 	= y - 10.0f * offsetMultiple;
+				boxPtr[3].back 		= z - 1000.0f * offsetMultiple;
+				boxPtr[3].front 	= z + 1000.0f * offsetMultiple;
 
 				KeepOldCollisionBoxes(newObj);
 
@@ -329,12 +402,18 @@ static const short aimAtPlayer[NUM_TRACKS][4] =
 
 Boolean	isSolid = itemPtr->parm[3] & 1;
 
-	if (itemPtr->parm[0] >= 4)
-	{
-#if _DEBUG
-		printf("Illegal tree type #%d %ld %ld\n", itemPtr->parm[0], x, z);
-#endif
-		return false;
+    // an unknown tree type is in the viking level, so an edit was made to make an existing tree type take it's place
+    // perhaps it's model doesn't exist and thus was removed from the game in refs but not in ter/rsrc files?
+	if (itemPtr->parm[0] >= 4){
+        if(gTrackNum == TRACK_NUM_SCANDINAVIA){
+            itemPtr->parm[0] = 0; // try to correct issue for the missing 11 tree type
+        }
+        else{
+            #if _DEBUG
+                printf("Illegal tree type #%d %ld %ld\n", itemPtr->parm[0], x, z);
+            #endif
+            return false;
+        }
 	}
 
 	NewObjectDefinitionType def =
@@ -344,12 +423,18 @@ Boolean	isSolid = itemPtr->parm[3] & 1;
 		.coord.x 	= x,
 		.coord.z 	= z,
 		.coord.y 	= GetTerrainY(x,z),
-		.flags 		= gAutoFadeStatusBits|STATUS_BIT_KEEPBACKFACES|STATUS_BIT_NOLIGHTING|STATUS_BIT_NOTEXTUREWRAP|STATUS_BIT_CLIPALPHA,
+		.flags 		= gAutoFadeStatusBits|STATUS_BIT_KEEPBACKFACES|STATUS_BIT_NOTEXTUREWRAP|STATUS_BIT_CLIPALPHA, // had STATUS_BIT_NOLIGHTING
 		.slot		= isSolid ? 642 : SLOT_OF_DUMB,
-		.moveCall 	= MoveStaticObject,
+		.moveCall 	= MoveTreeDancingObject, // was MoveStaticObject
 		.rot 		= 0,
 		.scale 		= 1.0 + RandomFloat() * .3f,
 	};
+    
+    if(itemPtr->parm[0] > 1){
+        if(gTrackNum == TRACK_NUM_SCANDINAVIA){
+            def.scale += 2.3251;
+        }
+    }
 
 	if (itemPtr->parm[3] & (1<<1))											// see if bump up
 		def.coord.y += 500.0f;
@@ -371,6 +456,8 @@ Boolean	isSolid = itemPtr->parm[3] & 1;
 		newObj->CBits			= CBITS_ALLSOLID;
 		SetObjectCollisionBounds(newObj, 1000, -10, -50, 50, 50, -50);
 	}
+    
+    newObj->SpecialF[1] = newObj->Scale.y; // set initial Y for tree
 
 
 	return(true);													// item was added
@@ -391,7 +478,7 @@ ObjNode	*newObj;
 		.coord.x 	= x,
 		.coord.z 	= z,
 		.coord.y 	= GetTerrainY(x,z),
-		.flags 		= gAutoFadeStatusBits|STATUS_BIT_NOLIGHTING|STATUS_BIT_CLIPALPHA,
+		.flags 		= gAutoFadeStatusBits|STATUS_BIT_CLIPALPHA, //had STATUS_BIT_NOLIGHTING
 		.slot 		= SLOT_OF_DUMB+1,
 		.moveCall 	= MoveStaticObject,
 		.rot 		= PI2 * ((float)itemPtr->parm[0] * (1.0f/8.0f)),
@@ -422,11 +509,18 @@ ObjNode	*newObj;
 		.coord		= {x,0,z},	// y filled in below
 		.flags 		= gAutoFadeStatusBits,
 		.slot 		= 10,
-		.moveCall 	= MoveStaticObject,
+		.moveCall 	= MoveMoaiHeadObject, // was MoveStaticObject
 		.rot 		= (float)itemPtr->parm[0] / 8.0f * PI2,
 		.scale 		= 1.0,
 	};
 	def.coord.y 	= GetMinTerrainY(x,z, def.group, def.type, 1.0),
+    def.scale = RandomFloat() * 3.5f - (sin(1.0f) * 1.57f) - (RandomFloat() * 2.15f);
+    if(def.scale < 0.9f){
+        def.scale = 0.9f;
+    }
+    
+    def.rot += RandomFloat() * 359.0f;
+    
 	newObj = MakeNewDisplayGroupObject(&def);
 	if (newObj == nil)
 		return(false);
@@ -439,6 +533,8 @@ ObjNode	*newObj;
 	newObj->CBits			= CBITS_ALLSOLID;
 
 	CreateCollisionBoxFromBoundingBox(newObj, .75f, 1);
+    
+    
 
 	return(true);													// item was added
 }
@@ -558,7 +654,27 @@ short	type = itemPtr->parm[0];
 		.rot 		= 0,
 		.scale 		= 1.0,
 	};
-	def.coord.y 	= GetMinTerrainY(x,z, def.group, def.type, 1.0),
+    def.coord.y 	= GetMinTerrainY(x,z, def.group, def.type, 1.0); // edited
+    
+    // bigger pillars in desert as they were invisible before
+    if(gTrackNum == TRACK_NUM_DESERT){
+        def.scale += 1.5341f;
+    }
+    
+    // if in egypt, and night, make the pillars bigger
+    if(gGamePrefs.nightMode == true){
+        if(gTrackNum == TRACK_NUM_EGYPT){
+            // Obelisks are huge in night mode
+            if(info[gTrackNum].type[type] != EGYPT_ObjType_Pillar){
+                def.scale *= 3.0;
+                def.coord.y -= 175;
+            }
+            else if(info[gTrackNum].type[type] == EGYPT_ObjType_Pillar){
+                def.scale = 1.75;
+                def.coord.y -= 27;
+            }
+        }
+    }
 
 	newObj = MakeNewDisplayGroupObject(&def);
 	if (newObj == nil)
@@ -766,6 +882,9 @@ ObjNode	*newObj;
 		.rot 		= itemPtr->parm[0] * (PI/2),
 		.scale 		= 1.0,
 	};
+    
+    def.scale *= 2; // due to terrain changes, had to upscale a bit
+    
 	newObj = MakeNewDisplayGroupObject(&def);
 	if (newObj == nil)
 		return(false);
@@ -985,7 +1104,12 @@ ObjNode	*newObj;
 		.rot 		= RandomFloat() * PI2,
 		.scale 		= 1.0,
 	};
+    
+    
+    def.scale += 2.25f;
+    
 	newObj = MakeNewDisplayGroupObject(&def);
+    
 	if (newObj == nil)
 		return(false);
 
@@ -1068,10 +1192,12 @@ ObjNode	*newObj;
 	{
 		case	TRACK_NUM_DESERT:
 				def.type 		= DESERT_ObjType_RockOverhang  + itemPtr->parm[1];
+                def.scale = 3.25;
 				break;
 
 		case	TRACK_NUM_ICE:
 				def.type 		= ICE_ObjType_IceBridge;
+                def.scale = 2.0;
 				break;
 
 		default:
@@ -1495,6 +1621,9 @@ short	type = itemPtr->parm[0];
 		.rot 		= PI2 * ((float)itemPtr->parm[1] * (1.0f/64.0f)),
 		.scale 		= 1.0,
 	};
+    
+    def.scale *= 2.15f;
+    
 	def.coord.y 	= GetMinTerrainY(x,z, def.group, def.type, 1.0),
 	newObj = MakeNewDisplayGroupObject(&def);
 	if (newObj == nil)
@@ -1591,6 +1720,10 @@ ObjNode	*newObj;
 		.rot 		= 0,
 		.scale 		= 1.06,
 	};
+    
+    
+    def.scale *= 2.06;
+    
 	newObj = MakeNewDisplayGroupObject(&def);
 	if (newObj == nil)
 		return(false);
