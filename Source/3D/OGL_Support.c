@@ -17,6 +17,8 @@
 #include <SDL_opengl.h>
 #include <math.h>
 
+bool debugInfoVisible = false;
+
 extern SDL_Window*		gSDLWindow;
 //extern	GWorldPtr		gTerrainDebugGWorld;
 
@@ -187,11 +189,11 @@ static OGLVector3D			fillDirection2 = { -1, -.3, -.3 };
 	}
 	viewDef->camera.hither 			= 10;
 	viewDef->camera.yon 			= 4000;
-	viewDef->camera.fov 			= 1.1;
+    viewDef->camera.fov 			= GAME_FOV;
 
 	viewDef->styles.usePhong 		= false;
 
-	viewDef->styles.useFog			= false;
+	viewDef->styles.useFog			= false; // ? was false
 	viewDef->styles.fogStart		= viewDef->camera.yon * .5f;
 	viewDef->styles.fogEnd			= viewDef->camera.yon;
 	viewDef->styles.fogDensity		= 1.0;
@@ -458,6 +460,8 @@ OGLStyleDefType *styleDefPtr = &setupDefPtr->styles;
 	else
 		glDisable(GL_FOG);
 
+    
+    
 	OGL_CheckError();
 }
 
@@ -485,7 +489,6 @@ GLfloat	ambient[4];
 	ambient[2] = lightDefPtr->ambientColor.b;
 	ambient[3] = 1;
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient);			// set scene ambient light
-
 
 			/**********************/
 			/* CREATE FILL LIGHTS */
@@ -1367,10 +1370,23 @@ static char* UpdateDebugText(void)
 
 static void MoveDebugText(ObjNode* theNode)
 {
-	if (SetObjectVisible(theNode, gDebugMode != 0))
-	{
-		TextMesh_Update(UpdateDebugText(), kTextMeshAlignLeft, theNode);
-	}
+    // disable debug text
+    if(GetKeyState(SDL_SCANCODE_0) && _DEBUG){
+        debugInfoVisible = true;
+        SetObjectVisible(theNode,true);
+    }
+    else if(GetKeyState(SDL_SCANCODE_1) && _DEBUG){
+        debugInfoVisible = false;
+        SetObjectVisible(theNode,false);
+    }
+    
+    if(!_DEBUG){
+        debugInfoVisible = false;
+    }
+    
+    if(debugInfoVisible){
+        TextMesh_Update(UpdateDebugText(), kTextMeshAlignLeft, theNode);
+    }
 }
 
 static void InitDebugText(void)
