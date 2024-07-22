@@ -242,6 +242,17 @@ typedef struct
 			/* TIME ATTACK */
 
 	float				lapTimes[LAPS_PER_RACE];
+    
+    
+    // MODDED STUFF
+    // MOD pow timers
+    float               zappedTimer;                // EXPERIMENTAL zapped POW timer
+    // mod modifiers and checks
+    bool canBeZapped; // can be zapped if false (tagged as not it/invisible means you cannot be zapped)
+    float submarineAdditionalSpeed;
+    bool canMoveEarly;
+    int playerID; // the id for tracking
+    
 }PlayerInfoType;
 
 
