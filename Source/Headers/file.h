@@ -77,6 +77,7 @@ typedef struct
 
 	TournamentProgression tournamentProgression;
 	char	playerName[32];
+    Boolean nightMode; // file save nightMode choice
 }PrefsType;
 
 #define PREFS_FOLDER_NAME "CroMagRally"
