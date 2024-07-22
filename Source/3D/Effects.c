@@ -41,7 +41,7 @@ static void MoveBubbleGenerator(ObjNode *theNode);
 
 
 
-#define	BONEBOMB_BLAST_RADIUS		(TERRAIN_POLYGON_SIZE * 1.9f)
+#define	BONEBOMB_BLAST_RADIUS		(TERRAIN_POLYGON_SIZE * 1.1f) // was multiplied by 1.9f
 #define	FIRE_BLAST_RADIUS			(TERRAIN_POLYGON_SIZE * 1.5f)
 
 #define	FIRE_TIMER	.05f
@@ -1187,8 +1187,13 @@ short				p;
 				/* MAKE PARTICLES */
 				/******************/
 
+        /*
 		dx = gPlayerInfo[p].objNode->Delta.x;
 		dz = gPlayerInfo[p].objNode->Delta.z;
+         */
+        
+        dx = 0;
+        dz = 0;
 
 		n = gFramesPerSecond * .5f;										// snow density is proportional to frame rate (so looks really nice on fast systems!)
 		if (n > 25)
