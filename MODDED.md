@@ -16,7 +16,7 @@ Since we're working with C, some things aren't possible without extra libraries 
 - Nitro is now dependent on placement in the race: You get less nitro time if your in first, versus if your in last place.
 - Bottle Rockets/Roman Candles' items now give you more per collection, as they are the most effective against CPUs and the player (15-20ish).
 - Bone Bombs, Oil, and the other non-candle/rocket items give you a random amount between 2-3, or 5-7, etc.-etc., depending on RNG.
-- Oil now flies further from players and CPUs.
+- Oil now spreads further and is wider to cause more slipping for careless drivers
 - Homing Pigeons fly faster and start up in the air more.
 - Bottle Rockets fly faster.
 - Torpedos used in non-water tracks don't display bubbles or play looping sounds (as they are not loaded, which caused errors, fixed the error, also unintendedly fixes the immersion a bit).
