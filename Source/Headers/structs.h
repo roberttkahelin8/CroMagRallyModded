@@ -357,4 +357,8 @@ typedef struct
 	void		(*drawCall)(ObjNode *);
 	float		rot;
 	float		scale;
+    // objects can have offsets
+    float offsetX;
+    float offsetY;
+    float offsetZ;
 }NewObjectDefinitionType;
