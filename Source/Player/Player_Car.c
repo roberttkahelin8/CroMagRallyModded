@@ -11,6 +11,8 @@
 
 #include "game.h"
 
+#include <SDL_scancode.h>
+
 /****************************/
 /*    PROTOTYPES            */
 /****************************/
@@ -41,6 +43,9 @@ static void UpdateInvisibility(short p);
 static void UpdateFrozenTimer(short p);
 static void UpdateFlaming(short p);
 
+// define modded updaters
+static void UpdateZapPow(short p);
+
 
 /****************************/
 /*    CONSTANTS             */
@@ -59,7 +64,7 @@ static void UpdateFlaming(short p);
 
 #define	BRAKE_EFFECTIVENESS		4000.0f //3300.0f			// Bigger == more braking power
 
-#define	AMBIENT_AIR_FRICTION	1100.0f
+#define	AMBIENT_AIR_FRICTION	950.0f
 
 
 #define	PLAYER_CAR_SCALE	1.0f
@@ -85,7 +90,7 @@ static void UpdateFlaming(short p);
 #define	NITRO_ACCELERATION		7000.0f
 #define	NITRO_MAXSPEED			7000.0f
 
-#define	WATER_MAXSPEED			2000.0f
+#define	WATER_MAXSPEED			7000.0f
 
 #define	DELTA_SUBDIV			40.0f				// smaller == more subdivisions per frame
 
@@ -93,7 +98,7 @@ static void UpdateFlaming(short p);
 #define	WATER_FRICTION			1600.0f
 
 
-#define	ENGINE_VOLUME			0.4f
+#define	ENGINE_VOLUME			0.32f // was 0.4f
 
 
 
@@ -184,6 +189,38 @@ void SetDefaultPhysics(void)
 }
 
 
+// zapped offsets, which should be half the offset value as that is what zapped scales will be
+static const float bottomZappedOffsets[NUM_LAND_CAR_TYPES] = {
+    -28.5,                // mammoth // -57
+    -39,                // bone buggy // was -78
+    -47,                // geode // was -94
+    -49.5,                // log // was -99
+    -31.5,                // turtle // was -63
+    -44.5,                // rock //was -89
+
+    -63.5,                // trojan //was -127
+    -53.5,                // obelisk // was -107
+
+    -38.5,                // catapult //was -77
+    -50,                // chariot //was -100
+};
+
+static const float bottomOffsetsCopy[NUM_LAND_CAR_TYPES] = {
+    -57,                // mammoth
+    -78,                // bone buggy
+    -94,                // geode
+    -99,                // log
+    -63,                // turtle
+    -89,                // rock
+
+    -127,                // trojan //was -127
+    -107,                // obelisk // was -107
+
+    -77,                // catapult //was -77
+    -100,                // chariot //was -100
+};
+
+
 
 /*************************** INIT PLAYER: CAR ****************************/
 //
@@ -207,11 +244,11 @@ static const float bottomOffsets[NUM_LAND_CAR_TYPES] =
 	-63,				// turtle
 	-89,				// rock
 
-	-127,				// trojan
-	-107,				// obelisk
+	-127,				// trojan //was -127
+	-107,				// obelisk // was -107
 
-	-77,				// catapult
-	-100,				// chariot
+	-77,				// catapult //was -77
+	-100,				// chariot //was -100
 
 };
 
@@ -250,6 +287,8 @@ static const float shadowScale[NUM_LAND_CAR_TYPES] =
 		.scale		= PLAYER_CAR_SCALE,
 		.player		= playerNum,
 	};
+    
+    
 	newObj = MakeNewDisplayGroupObject(&def);
 	if (newObj == nil)
 		return(false);
@@ -261,7 +300,7 @@ static const float shadowScale[NUM_LAND_CAR_TYPES] =
 
 				/* SET COLLISION INFO */
 
-	newObj->CType = CTYPE_PLAYER|CTYPE_MISC;
+	newObj->CType = CTYPE_PLAYER|CTYPE_MISC|CTYPE_AVOID; // didnt have CTYPE_AVOID
 	newObj->CBits = CBITS_ALLSOLID;
 	SetObjectCollisionBounds(newObj, 180, bottomOffsets[carType], -120, 120, 120, -120);
 
@@ -277,6 +316,66 @@ static const float shadowScale[NUM_LAND_CAR_TYPES] =
 
 
 	return(newObj);
+}
+
+// update scale on shadow attached to current car
+void UpdateCarShadowScale(short playerNum){
+    float oldScaleX = gPlayerInfo[playerNum].objNode->ShadowNode->Scale.x;
+    float oldScaleZ = gPlayerInfo[playerNum].objNode->ShadowNode->Scale.z;
+    
+    // if we are night mode and on tracks that are dark in night mode, we don't even need shadows, but just try to hide them in a way that makes sense for the lighting
+    
+    if(gGamePrefs.nightMode == true){
+        if(gTrackNum == TRACK_NUM_ICE){
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.r = 0.0f;
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.g = 0.05f;
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.b = 1.0f;
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.a = 0.25f;
+        }
+        else if(gTrackNum == TRACK_NUM_EGYPT){
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.r = 0.7f;
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.g = 0.7f;
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.b = 0.0f;
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.a = 0.32f;
+        }
+        else if(gTrackNum == TRACK_NUM_ATLANTIS){
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.r = 0.1f;
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.g = 0.25f;
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.b = 1.0f;
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.a = 0.11f;
+        }
+        else{
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.r = 1.0f;
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.g = 1.0f;
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.b = 1.0f;
+            gPlayerInfo[playerNum].objNode->ShadowNode->ColorFilter.a = 1.0f;
+        }
+    }
+    
+    // only the zap effect actually decreases physical size of player, so only that state needs to be checked for now
+    if(gPlayerInfo[playerNum].zappedTimer > 0.0f){
+        gPlayerInfo[playerNum].objNode->ShadowNode->Scale.x = 0.75f;
+        gPlayerInfo[playerNum].objNode->ShadowNode->Scale.z = 0.75f;
+    }
+    else{
+        gPlayerInfo[playerNum].objNode->ShadowNode->Scale.x = oldScaleX;
+        gPlayerInfo[playerNum].objNode->ShadowNode->Scale.z = oldScaleZ;
+    }
+}
+
+
+// update car offset player
+void UpdateCarOffsetPlayer(short playerNum){
+    int ct = gPlayerInfo[playerNum].vehicleType;
+    
+    // only the zap effect actually decreases physical size of player, so only that state needs to be checked for now
+    if(gPlayerInfo[playerNum].zappedTimer > 0.0f){
+        SetObjectCollisionBounds(gPlayerInfo[playerNum].objNode, 180, bottomZappedOffsets[ct], -120, 120, 120, -120);
+        
+    }
+    else{
+        SetObjectCollisionBounds(gPlayerInfo[playerNum].objNode, 180, bottomOffsetsCopy[ct], -120, 120, 120, -120);
+    }
 }
 
 
@@ -409,8 +508,7 @@ static void MovePlayer_Car(ObjNode *theNode)
 int					numPasses;
 float				oldFPS,oldFPSFrac;
 long	oldLeft,oldRight,oldFront,oldBack,oldTop,oldBottom;
-
-
+    
 		/* KEEP TRACK OF LAP TIMES */
 
 	TickLapTimes(theNode->PlayerNum);
@@ -421,7 +519,65 @@ long	oldLeft,oldRight,oldFront,oldBack,oldTop,oldBottom;
 
 	gCurrentPlayerNum = theNode->PlayerNum;			// get player #
 	gCurrentPlayer = theNode;
-
+    
+    
+    // starting boost logic
+    
+    // boosts are not wanted in other gamemodes
+    if(gGameMode == GAME_MODE_CAPTUREFLAG || gGameMode == GAME_MODE_TAG1 || gGameMode == GAME_MODE_TAG2 || gGameMode == GAME_MODE_SURVIVAL){
+        //
+    }
+    else{
+        if (gStartingLightTimer <= 2.0f && !(gStartingLightTimer <= 0.0f)){ // yellow, set light{
+            if(gPlayerInfo[gCurrentPlayerNum].isComputer == false){
+                if(gPlayerInfo[gCurrentPlayerNum].vehicleType == CAR_TYPE_MAMMOTH){
+                    gPlayerInfo[gCurrentPlayerNum].nitroTimer = 30.0f;
+                }
+                else if(gPlayerInfo[gCurrentPlayerNum].vehicleType == CAR_TYPE_BONEBUGGY){
+                    gPlayerInfo[gCurrentPlayerNum].nitroTimer = 10.0f;
+                }
+                else if(gPlayerInfo[gCurrentPlayerNum].vehicleType == CAR_TYPE_GEODE){
+                    gPlayerInfo[gCurrentPlayerNum].nitroTimer = 20.0f;
+                }
+                else if(gPlayerInfo[gCurrentPlayerNum].vehicleType == CAR_TYPE_LOG){
+                    gPlayerInfo[gCurrentPlayerNum].nitroTimer = 5.0f;
+                }
+                else if(gPlayerInfo[gCurrentPlayerNum].vehicleType == CAR_TYPE_TURTLE){
+                    gPlayerInfo[gCurrentPlayerNum].nitroTimer = 15.0f;
+                }
+                //
+                if(gGamePrefs.difficulty == DIFFICULTY_HARD){
+                    if(gPlayerInfo[gCurrentPlayerNum].nitroTimer <= 0.0f){
+                        gPlayerInfo[gCurrentPlayerNum].nitroTimer += 5.0f;
+                        gPlayerInfo[gCurrentPlayerNum].nitroTimer *= 2;
+                    }
+                }
+            }
+        }
+    }
+    
+    // these items were TOO good, so the CPUs only get 1 per pow collect (total, no stacking allowed)
+    if(gGamePrefs.difficulty == DIFFICULTY_HARD || gGamePrefs.difficulty == DIFFICULTY_MEDIUM || gGamePrefs.difficulty == DIFFICULTY_EASY){
+        if(gPlayerInfo[gCurrentPlayerNum].isComputer){
+            if(gPlayerInfo[gCurrentPlayerNum].powType == POW_TYPE_ROMANCANDLE || gPlayerInfo[gCurrentPlayerNum].powType == POW_TYPE_BOTTLEROCKET){
+                gPlayerInfo[gCurrentPlayerNum].powQuantity = 1;
+            }
+        }
+    }
+    else{
+        if(gPlayerInfo[gCurrentPlayerNum].isComputer){ // if the cpu got a powerful weapon in simplistic mode, make it a bone instead
+            if(gPlayerInfo[gCurrentPlayerNum].powType == POW_TYPE_ROMANCANDLE || gPlayerInfo[gCurrentPlayerNum].powType == POW_TYPE_BOTTLEROCKET){
+                gPlayerInfo[gCurrentPlayerNum].powType = POW_TYPE_BONE;
+            }
+        }
+    }
+    
+    // oh ok
+    if(!gPlayerInfo[gCurrentPlayerNum].isComputer){
+        if(GetKeyState(SDL_SCANCODE_7)){
+            //
+        }
+    }
 
 
 		/* SUB-DIVIDE DELTA INTO MANAGABLE LENGTHS */
@@ -489,8 +645,6 @@ long	oldLeft,oldRight,oldFront,oldBack,oldTop,oldBottom;
 
 	gFramesPerSecond = oldFPS;											// restore real FPS values
 	gFramesPerSecondFrac = oldFPSFrac;
-
-
 }
 
 
@@ -509,8 +663,9 @@ static void MovePlayer_Car_Multipass(ObjNode *theNode)
     	DoCPUControl_Car(theNode);
     }
             /* PLAYER DRIVEN */
-    else
-		DoPlayerControl_Car(theNode);
+    else{
+        DoPlayerControl_Car(theNode);
+    }
 
 
 	        /***********/
@@ -763,7 +918,7 @@ Boolean		onWater;
 
 	if (pinfo->onWater)
 	{
-		maxSpeed = WATER_MAXSPEED;
+		maxSpeed = WATER_MAXSPEED + 35.0f;
 	}
 	else
 	if (pinfo->nitroTimer > 0.0f)											// see if doing Nitro speed
@@ -1193,7 +1348,6 @@ short			playerNum = theNode->PlayerNum;
 
 }
 
-
 /************************ UPDATE PLAYER: CAR ***************************/
 
 static void UpdatePlayer_Car(ObjNode *theNode)
@@ -1220,6 +1374,9 @@ float	fps = gFramesPerSecondFrac;
 	UpdateInvisibility(p);
 	UpdateFrozenTimer(p);
 	UpdateFlaming(p);
+    //
+    UpdateZapPow(p);
+    //
 
 	gPlayerInfo[p].bumpSoundTimer -=  fps;
 
@@ -1278,6 +1435,29 @@ float	fps = gFramesPerSecondFrac;
 		freq = NORMAL_CHANNEL_RATE + (gPlayerInfo[p].currentRPM * 150000.0);
 		ChangeChannelRate(gPlayerInfo[p].engineChannel, freq);
 	}
+    
+    
+    // ?
+    // cheat for CPUs to make them more unpredictable, and perhaps fun?
+    if(gPlayerInfo[p].isComputer){
+        if(RandomRange(1,1200) == 5){
+            if (gPlayerInfo[p].stickyTiresTimer <= 0.0f){
+                gPlayerInfo[p].stickyTiresTimer = RandomRange(7,20) * 1.0f;
+            }
+            else if (gPlayerInfo[p].superSuspensionTimer <= 0.0f){
+                gPlayerInfo[p].superSuspensionTimer = RandomRange(3,20) * 1.0f;
+            }
+        }
+        else if(RandomRange(0,55000) < 5){
+            if(gPlayerInfo[p].invisibilityTimer <= 0.0f){
+                gPlayerInfo[p].invisibilityTimer = RandomRange(5,10) * 1.0f;
+                gPlayerInfo[p].groundAcceleration += 15.0f;
+            }
+        }
+        else if (RandomRange(0,72000) < 5){
+            gPlayerInfo[p].nitroTimer += 2.0f;
+        }
+    }
 }
 
 
@@ -1301,7 +1481,7 @@ int		pane;
 		if (gPlayerInfo[p].nitroTimer < 0.0f)
 			gPlayerInfo[p].nitroTimer = 0;
 
-		targetFOV = 2.0;
+        targetFOV = GAME_FOV; // was 2.0
 	}
 
 
@@ -1364,7 +1544,6 @@ static void UpdateStickyTires(short p)
 		gPlayerInfo[p].stickyTiresTimer = 0;
 		ResetTractionFromCopy(p);
 	}
-
 }
 
 
@@ -1421,8 +1600,15 @@ ObjNode	*theNode;
 	 while(theNode)
 	{
 		theNode->ColorFilter.a = t;
+        
+        // star power anyone?
+        if(gPlayerInfo[p].isComputer){
+            theNode->ColorFilter.r = RandomFloat() * 1.0f;
+            theNode->ColorFilter.g = RandomFloat() * 1.0f;
+            theNode->ColorFilter.b = RandomFloat() * 1.0f;
+        }
+        
 		theNode = theNode->ChainNode;
-
 	}
 
 }
@@ -1484,6 +1670,20 @@ static void UpdateFlaming(short p)
 		}
 
 	}
+}
+
+static void UpdateZapPow(short p){
+    // update zap timer
+    if(gPlayerInfo[p].zappedTimer <= 0.0f){
+        return;
+    }
+    
+    gPlayerInfo[p].zappedTimer -= gFramesPerSecondFrac;
+    if (gPlayerInfo[p].zappedTimer < 0.0f)                            // ran out of zap time?
+    {
+        gPlayerInfo[p].zappedTimer = 0;
+    }
+    // end zapper timer update
 }
 
 
@@ -2096,6 +2296,8 @@ short		p2 = car2->PlayerNum;
 #pragma mark -
 
 
+bool normalRestrictedMovement2 = false;
+
 /**************** DO CPU CONTROL: CAR ***************/
 //
 // INPUT:	theNode = the node of the player
@@ -2124,9 +2326,14 @@ Boolean			onWater;
 		/*********************************/
 		/* SEE IF NOT MOVING OR IS STUCK */
 		/*********************************/
-
-	if (!gNoCarControls)													// see if control is allowed
+    
+    
+	if (!gNoCarControls)
 	{
+        if(normalRestrictedMovement2 == true){
+            gPlayerInfo[player].canMoveEarly = true;
+        }
+        
 		gPlayerInfo[player].oldPositionTimer -= fps;
 		if (gPlayerInfo[player].oldPositionTimer <= 0.0f)					// see if time to do the check
 		{
@@ -2142,10 +2349,10 @@ Boolean			onWater;
 			if (CalcDistance3D(gPlayerInfo[player].oldPosition.x, gPlayerInfo[player].oldPosition.y, gPlayerInfo[player].oldPosition.z,
 								gCoord.x, gCoord.y, gCoord.z) < stuckDist)		// see if player isnt moving
 			{
-				if (gPlayerInfo[player].reverseTimer > 0.0f)					// if was reversing then go forward again
+				if (gPlayerInfo[player].reverseTimer > 0.0f) // if was reversing then go forward again
 					gPlayerInfo[player].reverseTimer = 0;
 				else
-					gPlayerInfo[player].reverseTimer = 4.0f;					// try moving backwards to get unstuck
+					gPlayerInfo[player].reverseTimer = RandomRange(4.0f, 5.0f); // modded try moving backwards to get unstuck, was just 4.0f
 			}
 			else
 			{
@@ -2208,9 +2415,9 @@ Boolean			onWater;
 	    		if (pathVarianceAngle > (PI/14))								// see if outside of tolerance
 				{
 					if (cross > 0.0f)
-						gPlayerInfo[player].analogSteering.x = -1.0f;
+						gPlayerInfo[player].analogSteering.x = -1.0f; // was just -1.0f
 					else
-						gPlayerInfo[player].analogSteering.x = 1.0f;
+                        gPlayerInfo[player].analogSteering.x = 1.0f; // was just 1.0f
 				}
 			}
 			else
@@ -2240,8 +2447,9 @@ Boolean			onWater;
 				{
 					/* GET PATH VECTOR FAR AHEAD OF US TO SEE IF WE'RE ABOUT TO TURN SHARP */
 
-					x = gCoord.x + (gDelta.x * .9f);									// project n seconds into the future
-					z = gCoord.z + (gDelta.z * .9f);
+					x = gCoord.x + (gDelta.x * .92f); // project n seconds into the future
+					z = gCoord.z + (gDelta.z * .92f); // 2 values here were .9f
+                    
 					if (CalcPathVectorFromCoord(x, gCoord.y, z, &futurePathVec))		// get path vector
 					{
 						/* SEE HOW MUCH WE'RE GOING TO NEED TO TURN */
@@ -2704,7 +2912,8 @@ ObjNode			*wheel,*link;
 
 	sex = gPlayerInfo[playerNum].sex;							// get player sex
 	if (sex > 1)
-		DoFatalAlert("CreateCarWheelsAndHead: sx > 1");
+        sex = 1;
+		//DoFatalAlert("CreateCarWheelsAndHead: sx > 1");
 
 	carType = gPlayerInfo[playerNum].vehicleType;				// get car type
 	GAME_ASSERT(carType < NUM_LAND_CAR_TYPES);
@@ -2727,8 +2936,13 @@ ObjNode			*wheel,*link;
 		};
 		if (carType == CAR_TYPE_CHARIOT)
 			def.flags |= STATUS_BIT_CLIPALPHA;
+        
+        // just a bit of fun
+        //def.type = (carType * 4) + RandomRange(0, 9);
+        //def.scale = RandomRange(theCar->Scale.x,theCar->Scale.x * 3.25f);
 
 		wheel = MakeNewDisplayGroupObject(&def);
+        
 		if (wheel == nil)
 			DoFatalAlert("CreateCarWheelsAndHead: MakeNewDisplayGroupObject failed!");
 
@@ -2827,6 +3041,9 @@ short		playerNum = head->PlayerNum;
 						case	POW_TYPE_FREEZE:
 								ThrowFreeze(playerNum, throwForward);
 								break;
+                        default:
+                            printf("Missing powtype throwable. PowType: %.1d \n",powType);
+                            break;
 					}
 
 
@@ -2843,11 +3060,79 @@ short		playerNum = head->PlayerNum;
 					MorphToSkeletonAnim(head->Skeleton, PLAYER_ANIM_SIT, 4.0);
 				}
 				break;
+        default:
+            //printf("Missing Animation Number For Head Skeleton. Animation #: %.1d \n",head->Skeleton->AnimNum);
+            break;
 	}
 }
 
+// if playerCanMoveEarly is true, only the player can move at all
+// if normal Resticted movement is true, normal gameplay will commense
+// if both are false, CPUs can move but player cannot
+
+bool playerCanMoveEarly = false; // DEBUG! allows only the player to move early if conditions above are correctly setup
+bool normalRestrictedMovement = true; // debug only feature to stop/start certain movements and apply special conditions that override the starting light's authority
+
+// if the racer who is a player is in any place on the final lap, the music will be sped up
+// when done with the race, the player will get a finished song playing instead of just normal music, easing the transition back to the menu or next race
+static void CheckMusic(int pn){
+    // fast music support for laps 3->beyond
+    // a threshold like number is used for those weird half-lap moments, so it must be past lap 2 (which is technically 1 in code)
+    //
+    
+    // computers were tested but it didn't feel right to speed up music when the player hasn't entered the final lap yet
+    if(gPlayerInfo[pn].isComputer){
+        return;
+    }
+    
+    // the finish race music override
+    if(!gPlayerInfo[pn].isComputer){
+        if(gPlayerInfo[pn].lapNum > 2.0f && gPlayerInfo[pn].lapNum != -1){
+            PlaySong(SONG_RACE_FINISHED, true);
+            return;
+        }
+    }
+    
+    // the 3rd/final lap music override
+    if(gPlayerInfo[pn].lapNum > 1.5f && gPlayerInfo[pn].lapNum != -1){
+        if(gTrackNum == TRACK_NUM_ATLANTIS){
+            PlaySong(SONG_ATLANTIS_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_ICE){
+            PlaySong(SONG_ICE_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_CHINA){
+            PlaySong(SONG_CHINA_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_CRETE){
+            PlaySong(SONG_CRETE_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_EGYPT){
+            PlaySong(SONG_EGYPT_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_DESERT){
+            PlaySong(SONG_DESERT_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_EUROPE){
+            PlaySong(SONG_EUROPE_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_JUNGLE){
+            PlaySong(SONG_JUNGLE_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_SCANDINAVIA){
+            PlaySong(SONG_VIKING_FAST, true);
+        }
+        else{
+            PlaySong(SONG_JUNGLE_FAST, true); // failsafe incase someone actually added new tracks without modifying this part
+        }
+    }
+    else{
+        return;
+    }
+}
 
 
+// The reasoning for putting certain static method refs in with the ControlPlayerCar is for various "we need this to always be updating" thingys...
 
 /**************** DO PLAYER CONTROL: CAR ***************/
 //
@@ -2861,7 +3146,30 @@ static void DoPlayerControl_Car(ObjNode *theNode)
 uint16_t			playerNum = theNode->PlayerNum;
 float			thrust,speed;
 float			fps = gFramesPerSecondFrac;
+    
+    // check music
+    CheckMusic(playerNum);
 
+    // move early/disable movement logic
+    if(!normalRestrictedMovement){
+        if(!gPlayerInfo[playerNum].isComputer && playerCanMoveEarly == true){
+            gPlayerInfo[playerNum].canMoveEarly = true;
+            gNoCarControls = false;
+        }
+        
+        if(gPlayerInfo[playerNum].isComputer && gPlayerInfo[playerNum].canMoveEarly == false){
+            gPlayerInfo[playerNum].braking             = false;
+            gPlayerInfo[playerNum].gasPedalDown     = false;
+            gPlayerInfo[playerNum].accelBackwards     = false;
+            gPlayerInfo[playerNum].steering         = 0;
+            gPlayerInfo[playerNum].currentThrust     = 0;
+            return;
+        }
+    }
+    
+    
+    
+    
 	if (gNoCarControls || (gPlayerInfo[playerNum].frozenTimer > 0.0f) || (gPlayerInfo[playerNum].isEliminated))		// see if no control
 	{
 		gPlayerInfo[playerNum].braking	 		= false;
@@ -2874,7 +3182,60 @@ float			fps = gFramesPerSecondFrac;
 
 	speed = theNode->Speed2D;									// get current speed of vehicle
 	thrust = 0;													// assume not gassing it
-
+    
+    
+    // if isn't it or if invisible, zapping is disabled
+    // must be in tag gamemodes for tagging logic to work
+    if(gGameMode == GAME_MODE_TAG1 || gGameMode == GAME_MODE_TAG2 || gGameMode == GAME_MODE_SURVIVAL){
+        if(gPlayerInfo[playerNum].isIt){
+            gPlayerInfo[playerNum].canBeZapped = true;
+        }
+        else{
+            gPlayerInfo[playerNum].canBeZapped = false;
+        }
+    }
+    else if(gGameMode == GAME_MODE_PRACTICE || gGameMode == GAME_MODE_TOURNAMENT || gGameMode == GAME_MODE_CAPTUREFLAG){
+        if(gPlayerInfo[playerNum].zappedTimer <= 0.0f){
+            gPlayerInfo[playerNum].canBeZapped = true;
+        }
+        else{
+            gPlayerInfo[playerNum].canBeZapped = false;
+        }
+    }
+    else if(gGameMode == GAME_MODE_MULTIPLAYERRACE){
+        gPlayerInfo[playerNum].canBeZapped = false; // not sure multiplayer support is possible with this power yet.
+    }
+    
+    
+    // fun
+    if(gPlayerInfo[playerNum].onThisMachine && !gPlayerInfo[playerNum].isComputer){
+        if(GetKeyState(SDL_SCANCODE_Z) && GetKeyState(SDL_SCANCODE_TAB) && gPlayerInfo[playerNum].canBeZapped == true){
+            PlayEffect_Parms(EFFECT_NITRO_SHOT, FULL_CHANNEL_VOLUME, FULL_CHANNEL_VOLUME, NORMAL_CHANNEL_RATE); // had * 2/3 normal channel rate
+            gPlayerInfo[playerNum].zappedTimer = 10.0f;
+        }
+    }
+    
+    
+    // Zapped player logic
+    if(gPlayerInfo[playerNum].zappedTimer > 0.0f){
+        gPlayerInfo[playerNum].objNode->Scale.x = 0.5f;
+        gPlayerInfo[playerNum].objNode->Scale.y = 0.5f;
+        gPlayerInfo[playerNum].objNode->Scale.z = 0.5f;
+        gPlayerInfo[playerNum].carStats.maxSpeed *= .31f;
+    }
+    else{
+        gPlayerInfo[playerNum].objNode->Scale.x = 1.0f;
+        gPlayerInfo[playerNum].objNode->Scale.y = 1.0f;
+        gPlayerInfo[playerNum].objNode->Scale.z = 1.0f;
+        gPlayerInfo[playerNum].carStats.maxSpeed = gPlayerInfo[playerNum].carStatsCopy.maxSpeed;
+    }
+    
+    
+    
+    // update car offsets (makes the shrinking more correct, and player will not fall through floor ever, so this will do)
+    UpdateCarOffsetPlayer(gPlayerInfo[playerNum].playerID);
+    UpdateCarShadowScale(gPlayerInfo[playerNum].playerID);
+    
 
 			/****************************/
 			/* CHECK GAS PEDAL & BRAKES */
@@ -2889,7 +3250,12 @@ float			fps = gFramesPerSecondFrac;
 	if (gPlayerInfo[playerNum].nitroTimer > 0.0f)
 	{
 		gPlayerInfo[playerNum].braking = false;
-		gPlayerInfo[playerNum].gasPedalDown = true;
+        if(!gPlayerInfo[playerNum].isComputer){
+            gPlayerInfo[playerNum].gasPedalDown = true;
+        }
+        else{
+            gPlayerInfo[playerNum].gasPedalDown = true;
+        }
 		thrust = NITRO_ACCELERATION;
 	}
 
@@ -2898,8 +3264,18 @@ float			fps = gFramesPerSecondFrac;
 	else
 	if (GetControlState(playerNum, kControlBit_Brakes) || gPlayerInfo[playerNum].raceComplete)
 	{
-		gPlayerInfo[playerNum].braking = true;
-		gPlayerInfo[playerNum].gasPedalDown = false;
+		gPlayerInfo[playerNum].braking = true; // was true
+		gPlayerInfo[playerNum].gasPedalDown = false; // was false
+        
+        // added a bit of funny to ending a race
+        if(gPlayerInfo[playerNum].raceComplete){
+            gPlayerInfo[playerNum].braking = true;
+            gPlayerInfo[playerNum].gasPedalDown = false;
+            
+            if(!gPlayerInfo[playerNum].isComputer){
+                //
+            }
+        }
 	}
 	else
 	{
@@ -3199,7 +3575,7 @@ ObjNode	*obj;
 
 				/* SEE IF SUBMARINES */
 
-			if (gTrackNum == TRACK_NUM_ATLANTIS)
+			if (gTrackNum == TRACK_NUM_ATLANTIS || gPlayerInfo[i].vehicleType == CAR_TYPE_SUB)
 			{
 				gPlayerInfo[i].submarineImmobilized = 2.0f;					// immobilize the sub for a few seconds
 			}
