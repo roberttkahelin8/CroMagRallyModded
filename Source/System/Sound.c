@@ -172,6 +172,7 @@ static const EffectDef kEffectsTable[NUM_EFFECTS] =
 	[EFFECT_INCOMPLETE]         = {SOUNDBANK_ANNOUNCER,			"Incomplete",			1000},
 	[EFFECT_COSTYA]             = {SOUNDBANK_ANNOUNCER,			"CostYa",				1000},
 	[EFFECT_WATCHIT]            = {SOUNDBANK_ANNOUNCER,			"WatchIt",				1000},
+    [EFFECT_NITRO_SHOT]            = {SOUNDBANK_ANNOUNCER,            "nitro_shot",                1000},
 };
 
 
@@ -493,10 +494,30 @@ short	musicFileRefNum;
 		[SONG_ICE]		= {":Audio:IceSong.aiff",		1.25f},
 		[SONG_EGYPT]	= {":Audio:EgyptSong.aiff",		1.25f},
 		[SONG_VIKING]	= {":Audio:VikingSong.aiff",	1.25f},
+        // fast songs for 3rd lap
+        [SONG_ATLANTIS_FAST]    = {":Audio:AtlantisSongFast.aiff",    1.25f},
+        [SONG_ICE_FAST]    = {":Audio:IceSongFast.aiff",    1.25f},
+        [SONG_DESERT_FAST]    = {":Audio:DesertSongFast.aiff",    1.0f},
+        [SONG_JUNGLE_FAST]    = {":Audio:JungleSongFast.aiff",    1.25f},
+        [SONG_CHINA_FAST]    = {":Audio:ChinaSongFast.aiff",        1.25f},
+        [SONG_CRETE_FAST]    = {":Audio:CreteSongFast.aiff",        1.25f},
+        [SONG_EUROPE_FAST]    = {":Audio:EuroSongFast.aiff",        1.25f},
+        [SONG_EGYPT_FAST]    = {":Audio:EgyptSongFast.aiff",        1.25f},
+        [SONG_VIKING_FAST]    = {":Audio:VikingSongFast.aiff",    1.25f},
+        // special songs
+        [SONG_RACE_FINISHED]    = {":Audio:RaceFinished.aiff",    1.25f},
 	};
 
-	if (songNum < 0 || songNum >= MAX_SONGS)
-		DoFatalAlert("PlaySong: unknown song #");
+    if (songNum < 0 || songNum >= MAX_SONGS){
+        songNum = 2; // just play jungle if it isn't a valid choice
+        if(songNum < 0 || songNum >= MAX_SONGS){
+            DoFatalAlert("PlaySong: unknown song #");
+        }
+    }
+    
+    if(_DEBUG){
+        printf(" Current Song: %u \n",songNum);
+    }
 
 	iErr = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, songs[songNum].path, &spec);
 	GAME_ASSERT(!iErr);
