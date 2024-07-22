@@ -1,3 +1,5 @@
+(anything that isn't in the future category that says 'will' or 'will be' or 'planned' is now in the source, so it is now: 'has', 'is', etc, etc).
+
 # What's this mod?
 An enhanced version of the the port of the game Cro-Mag Rally.
 Notably, there will be new features and enhanced old ones, some of which will be committed to this repository soon (they aren't github ready yet).
