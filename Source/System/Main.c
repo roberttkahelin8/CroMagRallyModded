@@ -159,6 +159,7 @@ void InitDefaultPrefs(void)
 	gGamePrefs.splitScreenMode3P	= SPLITSCREEN_MODE_3P_TALL;
 	gGamePrefs.monitorNum			= 0;			// main monitor by default
 	gGamePrefs.fullscreen			= true;
+    gGamePrefs.nightMode = false;
 	gGamePrefs.tagDuration 			= 3;
 	gGamePrefs.musicVolumePercent	= 60;			// careful to set these two volumes to one of the
 	gGamePrefs.sfxVolumePercent		= 60;			// the predefined values allowed in the settings menu
@@ -317,7 +318,7 @@ select_sex:
 					break;
 		}
 		gAutoPilot = true;									// set auto-pilot so computer will play for us in SRD mode
-		gSelfRunningDemoTimer = 50.0f;						// set duration of SRD
+		gSelfRunningDemoTimer = 72.0f;						// set duration of SRD
 	}
 	else
 	{
@@ -368,6 +369,8 @@ static Boolean PlayGame_Tournament(void)
 Boolean	canAbort = true;									// player can abort only at beginning
 short	placeToWin,startStage;
 
+    // placeToWin can be any of these values: 0 -> 1st, 1 -> 2nd, 2 -> 3rd, 3 -> 4th, 4 -> 5th, 5 -> 6th, etc. -> etc + 1
+    
 	if (gGamePrefs.difficulty <= DIFFICULTY_EASY)			// in easy mode, 3rd place will do
 		placeToWin = 2;
 	else
@@ -1138,7 +1141,6 @@ static void InitArea(void)
 OGLSetupInputType	viewDef;
 short				numPanes;
 
-
 	switch(gTrackNum)
 	{
 		case	TRACK_NUM_DESERT:
@@ -1186,6 +1188,7 @@ short				numPanes;
 
 		default:
 				PlaySong(SONG_DESERT, true);
+                break;
 	}
 
 
@@ -1222,7 +1225,7 @@ short				numPanes;
 
 	OGL_NewViewDef(&viewDef);
 
-	viewDef.camera.hither 			= 50;
+	viewDef.camera.hither 			= 65; // was 50
 	viewDef.camera.yon 				= (SUPERTILE_ACTIVE_RANGE * SUPERTILE_SIZE * TERRAIN_POLYGON_SIZE);
 	viewDef.camera.fov 				= GAME_FOV;
 
@@ -1234,42 +1237,142 @@ short				numPanes;
 	viewDef.view.pillarboxRatio		= PILLARBOX_RATIO_FULLSCREEN;
 	viewDef.view.fontName			= "rockfont";
 
-	viewDef.styles.useFog			= false;
-	viewDef.styles.fogStart			= viewDef.camera.yon * .1f;
-	viewDef.styles.fogEnd			= viewDef.camera.yon;
+    switch (gTrackNum) {
+        case TRACK_NUM_ICE:
+            if(gGamePrefs.nightMode == true){
+                viewDef.styles.useFog            = true; // ? was false
+                viewDef.styles.fogStart            = viewDef.camera.yon * .35f; // was .1f
+                viewDef.styles.fogEnd            = viewDef.camera.yon * 1.0f; // was nothing
+            }
+            else{
+                viewDef.styles.useFog            = false;
+                viewDef.styles.fogStart            = viewDef.camera.yon * .1f;
+                viewDef.styles.fogEnd            = viewDef.camera.yon;
+            }
+            break;
+        case TRACK_NUM_EGYPT:
+            if(gGamePrefs.nightMode == true){
+                viewDef.styles.useFog            = false; // ? was false
+                viewDef.styles.fogStart            = viewDef.camera.yon * .55f; // was .1f
+                viewDef.styles.fogEnd            = viewDef.camera.yon * 0.89f; // was nothing
+            }
+            else{
+                viewDef.styles.useFog            = false;
+                viewDef.styles.fogStart            = viewDef.camera.yon * .1f;
+                viewDef.styles.fogEnd            = viewDef.camera.yon;
+            }
+            break;
+        case TRACK_NUM_ATLANTIS:
+            if(gGamePrefs.nightMode == true){
+                viewDef.styles.useFog            = true; // ? was false
+                viewDef.styles.fogStart            = viewDef.camera.yon * .1f; // was .1f
+                viewDef.styles.fogEnd            = viewDef.camera.yon * 0.85f; // was nothing
+            }
+            else{
+                viewDef.styles.useFog            = false;
+                viewDef.styles.fogStart            = viewDef.camera.yon * .1f;
+                viewDef.styles.fogEnd            = viewDef.camera.yon;
+            }
+            break;
+        default:
+            viewDef.styles.useFog            = false;
+            viewDef.styles.fogStart            = viewDef.camera.yon * .1f;
+            viewDef.styles.fogEnd            = viewDef.camera.yon;
+            break;
+    }
 
 
 			/* SET LIGHTS */
 
+    // modify lighting for some effects
 	switch(gTrackNum)
 	{
 		case	TRACK_NUM_ICE:
-				viewDef.lights.numFillLights 	= 1;
+            if(gGamePrefs.nightMode == true){
+                viewDef.lights.numFillLights     = 0.75; // was 1
 
-				viewDef.lights.ambientColor.r 		= .7;
-				viewDef.lights.ambientColor.g 		= .7;
-				viewDef.lights.ambientColor.b 		= .7;
-				viewDef.lights.fillDirection[0].x 	= 1.0;
-				viewDef.lights.fillDirection[0].y 	= -.1;
-				viewDef.lights.fillDirection[0].z 	= 1.0;
-				viewDef.lights.fillColor[0].r 		= 1.0;
-				viewDef.lights.fillColor[0].g 		= 1.0;
-				viewDef.lights.fillColor[0].b 		= 1.0;
+                viewDef.lights.ambientColor.r         = .5; // was .7
+                viewDef.lights.ambientColor.g         = .5; // was .7
+                viewDef.lights.ambientColor.b         = .5; // was .7
+                viewDef.lights.fillDirection[0].x     = 1.0;
+                viewDef.lights.fillDirection[0].y     = -.1;
+                viewDef.lights.fillDirection[0].z     = 1.0;
+                viewDef.lights.fillColor[0].r         = 0.14; // was 1.0
+                viewDef.lights.fillColor[0].g         = 0.05; // was 1.0
+                viewDef.lights.fillColor[0].b         = 0.14; // was 1.0
+            }
+            else{
+                viewDef.lights.numFillLights     = 1;
+                viewDef.lights.ambientColor.r         = .7;
+                viewDef.lights.ambientColor.g         = .7;
+                viewDef.lights.ambientColor.b         = .7;
+                viewDef.lights.fillDirection[0].x     = 1.0;
+                viewDef.lights.fillDirection[0].y     = -.1;
+                viewDef.lights.fillDirection[0].z     = 1.0;
+                viewDef.lights.fillColor[0].r         = 1.0;
+                viewDef.lights.fillColor[0].g         = 1.0;
+                viewDef.lights.fillColor[0].b         = 1.0;
+            }
 				break;
 
 		case	TRACK_NUM_ATLANTIS:
-				viewDef.lights.numFillLights 		= 1;
+            if(gGamePrefs.nightMode == true){
+                viewDef.lights.numFillLights         = 0.57;
 
-				viewDef.lights.ambientColor.r 		= .5;
-				viewDef.lights.ambientColor.g 		= .5;
-				viewDef.lights.ambientColor.b 		= .7;
-				viewDef.lights.fillDirection[0].x 	= 0;
-				viewDef.lights.fillDirection[0].y 	= -1.0;
-				viewDef.lights.fillDirection[0].z 	= 0;
-				viewDef.lights.fillColor[0].r 		= .9;
-				viewDef.lights.fillColor[0].g 		= .9;
-				viewDef.lights.fillColor[0].b 		= 1.0;
-				break;
+                viewDef.lights.ambientColor.r         = 0.1;
+                viewDef.lights.ambientColor.g         = 0.25;
+                viewDef.lights.ambientColor.b         = 0.35;
+                viewDef.lights.fillDirection[0].x     = 0;
+                viewDef.lights.fillDirection[0].y     = -4.0;
+                viewDef.lights.fillDirection[0].z     = 0;
+                viewDef.lights.fillColor[0].r         = 0.01;
+                viewDef.lights.fillColor[0].g         = 0.1;
+                viewDef.lights.fillColor[0].b         = 0.2;
+            }
+            else{
+                viewDef.lights.numFillLights         = 1;
+
+                viewDef.lights.ambientColor.r         = .5;
+                viewDef.lights.ambientColor.g         = .5;
+                viewDef.lights.ambientColor.b         = .7;
+                viewDef.lights.fillDirection[0].x     = 0;
+                viewDef.lights.fillDirection[0].y     = -1.0;
+                viewDef.lights.fillDirection[0].z     = 0;
+                viewDef.lights.fillColor[0].r         = .9;
+                viewDef.lights.fillColor[0].g         = .9;
+                viewDef.lights.fillColor[0].b         = 1.0;
+            }
+            break;
+        
+        case    TRACK_NUM_EGYPT:
+            if(gGamePrefs.nightMode == true){
+                viewDef.lights.numFillLights         = 1;
+
+                viewDef.lights.ambientColor.r         = 0.75;
+                viewDef.lights.ambientColor.g         = 0.55;
+                viewDef.lights.ambientColor.b         = 0.0;
+                viewDef.lights.fillDirection[0].x     = 0.0;
+                viewDef.lights.fillDirection[0].y     = -1.0;
+                viewDef.lights.fillDirection[0].z     = 0.0;
+                viewDef.lights.fillColor[0].r         = 0.71;
+                viewDef.lights.fillColor[0].g         = 0.68;
+                viewDef.lights.fillColor[0].b         = 0.0;
+            }
+            else{
+                viewDef.lights.numFillLights         = 1;
+                OGLVector3D_Normalize(&gWorldSunDirection,&gWorldSunDirection);
+
+                viewDef.lights.ambientColor.r         = .6;
+                viewDef.lights.ambientColor.g         = .6;
+                viewDef.lights.ambientColor.b         = .6;
+                viewDef.lights.fillDirection[0]     = gWorldSunDirection;
+                viewDef.lights.fillColor[0]         = gFillColor1;
+                viewDef.lights.fillDirection[1].x     = -gWorldSunDirection.x;
+                viewDef.lights.fillDirection[1].y     = gWorldSunDirection.y;
+                viewDef.lights.fillDirection[1].z     = -gWorldSunDirection.z;
+                viewDef.lights.fillColor[1]            = gFillColor2;
+            }
+            break;
 
 		default:
 				viewDef.lights.numFillLights 		= 1;
@@ -1308,9 +1411,16 @@ short				numPanes;
 
 		case		TRACK_NUM_ICE:
 		case		TRACK_NUM_RAMPS:
-					viewDef.view.clearColor.r = 115.0/255.0;
-					viewDef.view.clearColor.g = 198.0/255.0;
-					viewDef.view.clearColor.b = 255.0/255.0;
+                    if(gGamePrefs.nightMode == true){
+                        viewDef.view.clearColor.r = 22.0/255.0;
+                        viewDef.view.clearColor.g = 4.0/255.0;
+                        viewDef.view.clearColor.b = 46.0/255.0;
+                    }
+                    else{
+                        viewDef.view.clearColor.r = 115.0/255.0;
+                        viewDef.view.clearColor.g = 198.0/255.0;
+                        viewDef.view.clearColor.b = 255.0/255.0;
+                    }
 					break;
 
 		case		TRACK_NUM_SPIRAL:
