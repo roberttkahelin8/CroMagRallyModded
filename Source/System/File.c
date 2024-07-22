@@ -660,6 +660,13 @@ float GetTotalTournamentTime(void)
 
 OSErr SaveScoreboardFile(void)
 {
+    /*if(sizeof(ScoreboardRecord) == 64){
+        return SaveUserDataFile(
+                                "Scoreboard",
+                                SCOREBOARD_MAGIC,
+                                sizeof(gScoreboard),
+                                (Ptr) &gScoreboard);
+    }*/
 	_Static_assert(sizeof(ScoreboardRecord) == 64, "Ideally, a ScoreboardRecord should be 64 bytes long");
 	return SaveUserDataFile(
 			"Scoreboard",
@@ -791,7 +798,9 @@ static const char*	levelModelFiles[NUM_TRACKS] =
 	GAME_ASSERT_MESSAGE((size_t)gTrackNum < (size_t)NUM_TRACKS, "illegal track#!");
 
 				/* LOAD AUDIO */
-
+    
+    // All tracks load
+    LoadSoundEffect(EFFECT_ZAP);
 
 	switch(gTrackNum)
 	{
@@ -819,8 +828,7 @@ static const char*	levelModelFiles[NUM_TRACKS] =
 				LoadSoundEffect(EFFECT_CATAPULT);
 				break;
 
-		case	TRACK_NUM_ATLANTIS:
-				LoadSoundEffect(EFFECT_ZAP);
+		case	TRACK_NUM_ATLANTIS: // had LoadSoundEffect(EFFECT_ZAP);
 				LoadSoundEffect(EFFECT_TORPEDOFIRE);
 				LoadSoundEffect(EFFECT_HUM);
 				LoadSoundEffect(EFFECT_BUBBLES);
@@ -1011,8 +1019,11 @@ Ptr						tempBuffer16 = nil;
 
 	gTerrainTileWidth = (gTerrainTileWidth/SUPERTILE_SIZE)*SUPERTILE_SIZE;		// round size down to nearest supertile multiple
 	gTerrainTileDepth = (gTerrainTileDepth/SUPERTILE_SIZE)*SUPERTILE_SIZE;
-	gTerrainUnitWidth = gTerrainTileWidth*TERRAIN_POLYGON_SIZE;					// calc world unit dimensions of terrain
-	gTerrainUnitDepth = gTerrainTileDepth*TERRAIN_POLYGON_SIZE;
+    
+    
+    gTerrainUnitWidth = gTerrainTileWidth*TERRAIN_POLYGON_SIZE;                    // calc world unit dimensions of terrain
+    gTerrainUnitDepth = gTerrainTileDepth*TERRAIN_POLYGON_SIZE;
+    
 	gNumSuperTilesDeep = gTerrainTileDepth/SUPERTILE_SIZE;						// calc size in supertiles
 	gNumSuperTilesWide = gTerrainTileWidth/SUPERTILE_SIZE;
 
@@ -1109,7 +1120,8 @@ Ptr						tempBuffer16 = nil;
 	yScale *= gUserPhysics.terrainHeight;
 
 	Alloc_2d_array(float, gMapYCoords, gTerrainTileDepth+1, gTerrainTileWidth+1);	// alloc 2D array for map
-
+    
+    
 	hand = GetResource('YCrd',1000);
 	if (hand == nil)
 		DoAlert("ReadDataFromPlayfieldFile: Error reading height data resource!");
@@ -1815,3 +1827,4 @@ char* CSVIterator(char** csvCursor, bool* eolOut)
 	*eolOut = eol;
 	return columnStart;
 }
+
