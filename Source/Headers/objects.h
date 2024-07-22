@@ -118,3 +118,9 @@ void UnchainNode(ObjNode* theNode);
 
 #define GetSpecialData(theNode, structType) \
 	((structType*) (theNode)->SpecialPadding)
+
+
+// extras
+extern void MoveCustomObject(ObjNode *theNode);
+extern void MoveMoaiHeadObject(ObjNode *theNode);
+extern void MoveTreeDancingObject(ObjNode *theNode);
