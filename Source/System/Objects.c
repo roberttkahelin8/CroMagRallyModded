@@ -34,6 +34,9 @@ static void DrawPathVec(short p);
 
 #define	OBJ_DEL_Q_SIZE	100
 
+#define TreeDanceBob SpecialF[0]
+#define initialTreeY SpecialF[1]
+
 
 /**********************/
 /*     VARIABLES      */
@@ -299,8 +302,10 @@ void ResetDisplayGroupObject(ObjNode *theNode)
 	DisposeObjectBaseGroup(theNode);									// dispose of old group
 	CreateBaseGroup(theNode);											// create new group object
 
-	if (theNode->Type >= gNumObjectsInBG3DGroupList[theNode->Group])							// see if illegal
-		DoFatalAlert("ResetDisplayGroupObject: type > gNumObjectsInGroupList[]!");
+    if (theNode->Type >= gNumObjectsInBG3DGroupList[theNode->Group]){
+        //sub support somehow plz
+        DoFatalAlert("ResetDisplayGroupObject: type > gNumObjectsInGroupList[]!");
+    }
 
 	AttachGeometryToDisplayGroupObject(theNode,gBG3DGroupList[theNode->Group][theNode->Type]);	// attach geometry to group
 
@@ -1066,6 +1071,60 @@ void MoveStaticObject(ObjNode *theNode)
 	UpdateShadow(theNode);										// prime it
 }
 
+
+
+
+/** MOVE CUSTOM OBJECT  */
+void MoveCustomObject(ObjNode *theNode)
+{
+    
+    if (TrackTerrainItem(theNode)){
+        DeleteObject(theNode);
+        return;
+    }
+    
+    theNode->Rot.y += gFramesPerSecondFrac * 2.0f;
+    UpdateObjectTransforms(theNode);
+
+    UpdateShadow(theNode);
+}
+
+void MoveCycloramaObject(ObjNode *theNode){}
+
+
+void MoveMoaiHeadObject(ObjNode *theNode)
+{
+    
+    if (TrackTerrainItem(theNode)){
+        DeleteObject(theNode);
+        return;
+    }
+    
+    theNode->Rot.y += gFramesPerSecondFrac * 2.0f;
+    UpdateObjectTransforms(theNode);
+
+    UpdateShadow(theNode);
+}
+
+void MoveTreeDancingObject(ObjNode *theNode)
+{
+    if (TrackTerrainItem(theNode)){
+        DeleteObject(theNode);
+        return;
+    }
+    
+    if(RandomRange(0.01, 5.01) <= 2.31){
+        theNode->TreeDanceBob += gFramesPerSecondFrac * (1.25f - RandomRange(0.11,0.35));
+        theNode->Scale.y = theNode->initialTreeY + cos(theNode->TreeDanceBob) * 0.15f;
+    }
+    //
+    if(theNode->Scale.y < 1.0f){
+        theNode->Scale.y = 1.0001f;
+    }
+    
+    UpdateObjectTransforms(theNode);
+    UpdateShadow(theNode);
+}
 
 
 //============================================================================================================
