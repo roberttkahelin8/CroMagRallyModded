@@ -23,8 +23,8 @@ static void MakeFenceGeometry(void);
 /*    CONSTANTS             */
 /****************************/
 
-#define MAX_FENCES			60
-#define	MAX_NUBS_IN_FENCE	80
+#define MAX_FENCES			60 // 60
+#define	MAX_NUBS_IN_FENCE	80 // 80
 
 
 #define	FENCE_SINK_FACTOR	200.0f
@@ -104,7 +104,7 @@ const char* kFenceNames[NUM_FENCE_TYPES] =
 long			gNumFences = 0;
 short			gNumFencesDrawn;
 FenceDefType	*gFenceList = nil;
-Boolean			gDrawInvisiFences = true;
+Boolean			gDrawInvisiFences = false; // true
 
 MOMaterialObject	*gFenceMaterials[NUM_FENCE_TYPES];
 
@@ -335,10 +335,19 @@ OGLPoint3D				*nubs;
 	{
 		.genre		= CUSTOM_GENRE,
 		.slot		= FENCE_SLOT,
-		.flags		= STATUS_BIT_KEEPBACKFACES|STATUS_BIT_NOLIGHTING,
-		.scale		= 1,
+		.flags		= STATUS_BIT_KEEPBACKFACES | STATUS_BIT_NOLIGHTING,
+		.scale		= 1, // was 1
 		.drawCall	= DrawFences,
 	};
+    
+    if(gGamePrefs.nightMode == true){
+        if(gTrackNum == TRACK_NUM_ICE || gTrackNum == TRACK_NUM_EGYPT || gTrackNum == TRACK_NUM_ATLANTIS){
+            def.flags = STATUS_BIT_KEEPBACKFACES;
+        }
+    }
+    else{
+        def.flags = STATUS_BIT_KEEPBACKFACES | STATUS_BIT_NOLIGHTING;
+    }
 
 	return MakeNewObject(&def);
 }
@@ -436,8 +445,10 @@ float					minX,minY,minZ,maxX,maxY,maxZ;
 			z = nubs[i].z;
 
 			y = nubs[i].y;
-			y -= FENCE_SINK_FACTOR;										// sink into ground a little bit
+			y -= FENCE_SINK_FACTOR + 70.0;	// add offset mod									// sink into ground a little bit
 			y2 = y + height;
+            
+            y2 = y + height + 50;
 
 					/* CHECK BBOX */
 
@@ -476,8 +487,14 @@ float					minX,minY,minZ,maxX,maxY,maxZ;
 
 				/* SET CALCULATED BBOX */
 
+        // modded fence boundbox
+        minX = minX - 5.0;
+        maxX = maxX - 1.0;
+        minZ = minZ - 5.0;
+        maxZ = maxZ - 1.0;
+        
 		fence->bBox.min.x = minX;
-		fence->bBox.max.x = maxX;
+        fence->bBox.max.x = maxX;
 		fence->bBox.min.y = minY;
 		fence->bBox.max.y = maxY;
 		fence->bBox.min.z = minZ;
