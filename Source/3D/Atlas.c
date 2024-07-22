@@ -855,7 +855,8 @@ void Atlas_DrawString2(
 	if (!(flags & kTextMeshKeepCurrentProjection))
 		OGL_SetProjection(kProjectionType2DOrthoCentered);
 
-	OGL_DisableLighting();
+    OGL_DisableLighting();
+	
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
 
