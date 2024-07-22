@@ -10,6 +10,7 @@
 /****************************/
 
 #include "game.h"
+#include <SDL_scancode.h>
 
 
 /****************************/
@@ -234,11 +235,25 @@ int		p;
 	{
 		gPlayerInfo[p].cameraRingRot = PI;
 		gPlayerInfo[p].cameraUserRot = 0;
+        if(!gPlayerInfo[p].isComputer){
+            gPlayerInfo[p].cameraMode = 0;
+        }
 	}
 
 		/* CALL SOME STUFF TO GET CAMERAS INTO POSITION & UPDATE DRAW CONTEXT INFO */
 
 	gFramesPerSecondFrac = 1.0/100.0;
+    
+    for (int t = 0; t < gNumLocalPlayers; t++){
+        gPlayerInfo[p].cameraMode = 1;
+        UpdateCameras(false, true);
+        gPlayerInfo[p].cameraMode = CAMERA_MODE_NORMAL1;
+        UpdateCameras(false, true);
+        gPlayerInfo[p].cameraMode = CAMERA_MODE_NORMAL2;
+        UpdateCameras(false, true);
+    }
+    
+    
 	UpdateCameras(true, false);							// prime them
 }
 
@@ -406,7 +421,18 @@ OGLVector3D up = { 0,1,0 };		// NOT const, it's transformed in 1st-person view
 				to.z = from.z + v.z * rearViewMultiplier;
 				goto update;
 		}
+        case CAMERA_MODE_FREECAM:
+            if(_DEBUG){
+                printf("Freecam disabled.");
+            }
+            gPlayerInfo[playerNum].cameraMode = CAMERA_MODE_NORMAL1;
+            break;
 	}
+    
+    // potential in the future freecam stuff
+    if(gPlayerInfo[playerNum].cameraMode == CAMERA_MODE_FREECAM){
+        return;
+    }
 
 
 			/* GET THIS PLAYER'S CAMERA INFO */
