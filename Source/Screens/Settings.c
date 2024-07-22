@@ -62,6 +62,10 @@ static int ShouldDisplayMonitorCycler(const MenuItem* mi)
 	return (GetNumDisplays() <= 1) ? kMILayoutFlagHidden : 0;
 }
 
+static void OnToggleNightMode(const MenuItem* mi){
+    //SetFullscreenMode(true);
+}
+
 static void OnChangeMSAA(const MenuItem* mi)
 {
 	const long msaaWarningCookie = 'msaa';
@@ -190,6 +194,17 @@ const MenuItem gSettingsMenuTree[] =
 			},
 		},
 	},
+    // night mode toggle
+    {
+        kMICycler1, STR_NIGHTMODE,
+        .callback=OnToggleNightMode,
+        .cycler=
+        {
+            .valuePtr=&gGamePrefs.nightMode,
+            .choices={ {STR_OFF, 0}, {STR_ON, 1} },
+        },
+    },
+    
 	{kMISpacer, .customHeight=.5f },
 	{kMILabel, STR_FULLSCREEN_HINT, .customHeight=.5f },
 	{kMISpacer, .customHeight=.5f },
