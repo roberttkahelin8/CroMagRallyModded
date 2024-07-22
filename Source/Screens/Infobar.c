@@ -50,9 +50,9 @@ static void MovePressAnyKey(ObjNode *theNode);
 
 #define MAX_PANEDIVIDER_QUADS		4
 
-#define MAX_SUBICONS				12
+#define MAX_SUBICONS				32 // was 12
 
-#define MAX_POWTIMERS 6
+#define MAX_POWTIMERS 7 // was 6
 
 enum
 {
@@ -137,6 +137,7 @@ static const struct
 	{ offsetof(PlayerInfoType, invisibilityTimer),		INFOBAR_SObjType_Invisibility },
 	{ offsetof(PlayerInfoType, frozenTimer),			INFOBAR_SObjType_Weapon_Freeze },
 	{ offsetof(PlayerInfoType, flamingTimer),			INFOBAR_SObjType_RedTorch },
+    { offsetof(PlayerInfoType, zappedTimer),            INFOBAR_SObjType_WrongWay },
 };
 
 static int8_t gPOWTimersByRow[MAX_LOCAL_PLAYERS][MAX_POWTIMERS];
@@ -427,7 +428,7 @@ static const char*	maps[] =
 	float mapImageHeight = GetSpriteInfo(SPRITE_GROUP_OVERHEADMAP, 1)->yadv;
 	gMapFit = OVERHEAD_MAP_REFERENCE_SIZE / mapImageHeight;
 
-
+    
 
 
 	float bottomTextY = 225;
@@ -965,6 +966,14 @@ enum
 			if (hasAnyPow)	// if we lost the POW, retain previous sprite
 			{
 				ModifySpriteObjectFrame(node, INFOBAR_SObjType_Weapon_Bone + pi->powType);
+                
+                if(pi->powType == POW_TYPE_ZAPPER){
+                    //INFOBAR_SObjType_Token_ArrowheadDim
+                    node->Scale.x *= 0.55;
+                    node->Scale.y *= 0.55;
+                    node->Scale.z *= 0.55;
+                    ModifySpriteObjectFrame(node,INFOBAR_SObjType_Token_Arrowhead);
+                }
 
 				if (special->displayedValue != pi->powType &&
 					special->displayedValue != -1)
