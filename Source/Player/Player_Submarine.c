@@ -38,7 +38,7 @@ static void AlignPropellerOnSubmarine(ObjNode *theCar);
 
 #define	DELTA_SUBDIV			40.0f
 
-#define	SUB_MAX_Y				6000.0f
+#define	SUB_MAX_Y				16000.0f // 6000.0f
 
 #define	SUBMARINE_FRICTION		3000.0f
 
@@ -76,7 +76,7 @@ ObjNode			*newObj;
 		.flags		= STATUS_BIT_ROTXZY,
 		.slot		= PLAYER_SLOT,
 		.moveCall	= MovePlayer_Submarine,
-		.scale		= 1.0,
+		.scale		= 0.75, // 1.0
 		.player		= playerNum,
 	};
 
@@ -258,12 +258,19 @@ OGLVector3D		aimVec;
 	}
 	else
 	{
-		float	maxSpeed = gPlayerInfo[playerNum].carStats.maxSpeed + ((float)gPlayerInfo[playerNum].place * 100.0f);
+        float	maxSpeed = (gPlayerInfo[playerNum].carStats.maxSpeed + gPlayerInfo[playerNum].submarineAdditionalSpeed) + ((float)gPlayerInfo[playerNum].place * 100.0f);
 
-		if (gPlayerInfo[playerNum].nitroTimer > 0.0f)			// see if give nitro boost
-			maxSpeed *= 1.4f;
+        if (gPlayerInfo[playerNum].nitroTimer > 0.0f){// see if give nitro boost
+            if(gTrackNum == TRACK_NUM_ATLANTIS){
+                maxSpeed *= 1.4f;
+            }
+            else if(gTrackNum != TRACK_NUM_ATLANTIS){
+                maxSpeed *= 1.9f;
+            }
+        }
 
 		gPlayerInfo[playerNum].currentRPM += fps * gPlayerInfo[playerNum].carStats.acceleration;		// store sub speed in RPM variable
+        
 		if (gPlayerInfo[playerNum].currentRPM > maxSpeed)
 			gPlayerInfo[playerNum].currentRPM = maxSpeed;
 
@@ -299,12 +306,54 @@ OGLVector3D		aimVec;
 
 }
 
+// update music when player sub
+// (creates more suspense)
+static void CheckMusicSubMode(int pn){
+    // fast music support for laps 3->beyond
+    // a threshold like number is used for those weird half-lap moments, so it must be past lap 2 (which is technically 1 in code)
+    // we are in a sub, which means this is a copy of the other Player_Car->CheckMusic(), however subs are not cars so without this nothing would change
+    if(gPlayerInfo[pn].lapNum > 1.5f && gPlayerInfo[pn].lapNum != -1){
+        if(gTrackNum == TRACK_NUM_ATLANTIS){
+            PlaySong(SONG_ATLANTIS_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_ICE){
+            PlaySong(SONG_ICE_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_CHINA){
+            PlaySong(SONG_CHINA_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_CRETE){
+            PlaySong(SONG_CRETE_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_EGYPT){
+            PlaySong(SONG_EGYPT_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_DESERT){
+            PlaySong(SONG_DESERT_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_EUROPE){
+            PlaySong(SONG_EUROPE_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_JUNGLE){
+            PlaySong(SONG_JUNGLE_FAST, true);
+        }
+        else if(gTrackNum == TRACK_NUM_SCANDINAVIA){
+            PlaySong(SONG_VIKING_FAST, true);
+        }
+        else{
+            PlaySong(SONG_JUNGLE_FAST, true);
+        }
+    }
+}
+
 
 /************************ UPDATE PLAYER: SUBMARINE ***************************/
 
 static void UpdatePlayer_Submarine(ObjNode *theNode)
 {
 short	p = theNode->PlayerNum;
+    
+    CheckMusicSubMode(p); // update the music in game by checking the player, change music if ANYONE is in final lap (creates more suspense)
 
 	UpdateObject(theNode);
 
@@ -568,7 +617,7 @@ short			avoidTurn;
 				if (gPlayerInfo[player].reverseTimer > 0.0f)					// if was reversing then go forward again
 					gPlayerInfo[player].reverseTimer = 0;
 				else
-					gPlayerInfo[player].reverseTimer = 4.0f;					// try moving backwards to get unstuck
+					gPlayerInfo[player].reverseTimer = RandomRange(4.0f,7.0f);					// try moving backwards to get unstuck
 			}
 			else
 			{
@@ -641,10 +690,43 @@ short			avoidTurn;
 		if ((gPlayerInfo[player].reverseTimer -= fps) < 0.0f)			// dec reverse timer
 			gPlayerInfo[player].reverseTimer = 0;
 	}
+    else{
+        if(gPlayerInfo[player].isComputer){
+            if((gCoord.y - GetTerrainY(gCoord.x, gCoord.z)) > 4000.0f){
+                gPlayerInfo[player].analogSteering.y = RandomRange(-1.0f,0.1f);
+            }
+        }
+    }
 //	else
 //	if ((gCoord.y - GetTerrainY(gCoord.x, gCoord.z)) > 4000.0f)			// keep from being too high
 //		gPlayerInfo[player].analogSteering.y = -1.0f;
-
+    
+    
+    
+    
+    // submarine hacks to make them useful/responsive in non-water tracks
+    if(gPlayerInfo[player].vehicleType == CAR_TYPE_SUB){
+        if(gPlayerInfo[player].zappedTimer > 0.0f){
+            gPlayerInfo[player].submarineImmobilized = gPlayerInfo[player].zappedTimer / 2.0f;
+        }
+        
+        if(gTrackNum != TRACK_NUM_ATLANTIS){
+            gPlayerInfo[player].submarineAdditionalSpeed = 1000.0f + (gPlayerInfo[player].superSuspensionTimer * 2) + (gPlayerInfo[player].stickyTiresTimer * 2);
+        }
+        
+        if(gPlayerInfo[player].flamingTimer > 0.0f){
+            gPlayerInfo[player].flamingTimer = 0.0f; // flames do nothing to subs made of iron
+        }
+        
+        if(gPlayerInfo[player].frozenTimer > 0.0f){
+            gPlayerInfo[player].frozenTimer = 0.0f; // ice does nothing to subs made of iron
+        }
+        
+        if(gPlayerInfo[player].invisibilityTimer > 0.0f){
+            // ?
+        }
+    }
+    
 
 				/* SEE IF CPU PLAYER SHOULD ATTACK */
 
@@ -820,7 +902,9 @@ OGLPoint3D		coord;
 		coord.x = prop->BaseTransformMatrix.value[M03];			// get coord from prop matrix
 		coord.y = prop->BaseTransformMatrix.value[M13];
 		coord.z = prop->BaseTransformMatrix.value[M23];
-		MakeBubbles(theCar, &coord, .5, 1.0);
+        if(gTrackNum == TRACK_NUM_ATLANTIS){
+            MakeBubbles(theCar, &coord, .5, 1.0);
+        }
 	}
 }
 
