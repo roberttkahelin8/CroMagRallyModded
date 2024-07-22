@@ -45,9 +45,9 @@ static void DropLandMine(short playerNum);
 #define	NITRO_DURATION		5.0f
 
 #define	BIRD_BOMB_MAX_ATTACK_DIST	15000.0f
-#define	BIRD_FLY_SPEED		6000.0f
+#define	BIRD_FLY_SPEED		7800.0f //6000.0f
 
-#define	BOTTLE_ROCKET_SPEED			5500.0f
+#define	BOTTLE_ROCKET_SPEED			8000.0f // was 5500.0f
 #define	BOTTLEROCKET_BLAST_RADIUS	600.0f
 
 #define TORPEDO_SPEED			(MAX_SUBMARINE_SPEED + 1900.0f)
@@ -96,6 +96,39 @@ short	playerNum = theNode->PlayerNum;
 	if (GetControlStateNew(playerNum, kControlBit_ThrowBackward))
 		VehicleActivatePOW(theNode, false);
 
+}
+
+// zap weapon
+void ZapPlayers(playerNum){
+    for(int curplay = 0; curplay < gNumTotalPlayers; curplay++){
+        if(gPlayerInfo[curplay].playerID != gPlayerInfo[playerNum].playerID){
+            if(gPlayerInfo[curplay].canBeZapped == true){
+                if(gPlayerInfo[curplay].nitroTimer > 0.0f){
+                    gPlayerInfo[curplay].nitroTimer = 0.0f;
+                }
+                gPlayerInfo[curplay].zappedTimer = 5.0f;
+                gPlayerInfo[curplay].braking = true;
+                gPlayerInfo[curplay].gasPedalDown = false;
+            }
+            
+            if(!gPlayerInfo[curplay].isComputer && !gPlayerInfo[curplay].onThisMachine){
+                PlayAnnouncerSound(EFFECT_GOTTAHURT,false,0.5);
+            }
+        }
+        else{
+            DecCurrentPOWQuantity(curplay);
+            
+            if(gPlayerInfo[curplay].onThisMachine){
+                PlayAnnouncerSound(EFFECT_OHYEAH,false,0.5);
+                PlayEffect3D(EFFECT_ZAP,&gPlayerInfo[playerNum].objNode->Coord);
+            }
+            
+            if(gPlayerInfo[curplay].zappedTimer > 0.0f){
+                gPlayerInfo[curplay].zappedTimer = 0.0f;
+                gPlayerInfo[curplay].nitroTimer = 3.0f;
+            }
+        }
+    }
 }
 
 
@@ -148,7 +181,14 @@ short		powType;
 				break;
 
 		case	POW_TYPE_TORPEDO:
-				PlayerLaunchTorpedo(playerNum);
+                if(gTrackNum != TRACK_NUM_ATLANTIS){
+                    PlayerLaunchBottleRocket(playerNum, forwardThrow);
+                    PlayerLaunchRomanCandle(playerNum);
+                    PlayerLaunchTorpedo(playerNum);
+                }
+                else{
+                    PlayerLaunchTorpedo(playerNum);
+                }
 				break;
 
 		case	POW_TYPE_NITRO:
@@ -158,9 +198,17 @@ short		powType;
 		case	POW_TYPE_MINE:
 				DropLandMine(playerNum);
 				break;
+            
+        case    POW_TYPE_ZAPPER:
+                ZapPlayers(playerNum);
+                break;
 
 		default:
-				DoFatalAlert("VehicleActivatePOW: unknown powType");
+            if(_DEBUG){
+                printf("Unknown powType detected. Skipping!");
+            }
+                break;
+				//DoFatalAlert("VehicleActivatePOW: unknown powType");
 	}
 }
 
@@ -170,7 +218,34 @@ short		powType;
 void ActivateNitroPOW(short playerNum)
 {
 	DecCurrentPOWQuantity(playerNum);
-	gPlayerInfo[playerNum].nitroTimer += NITRO_DURATION;		// give player more nitro
+    
+    // nitro now is place dependent and one per use
+    // CPUs already get free nitro, so they don't get to choose when they get nitro power
+    if(gPlayerInfo[playerNum].isComputer){
+        return;
+    }
+    
+    if(gPlayerInfo[playerNum].place == 1){
+        gPlayerInfo[playerNum].nitroTimer = NITRO_DURATION;        // give player more nitro
+    }
+    else if(gPlayerInfo[playerNum].place == 2){
+        gPlayerInfo[playerNum].nitroTimer = 7.0f;
+    }
+    else if(gPlayerInfo[playerNum].place == 3){
+        gPlayerInfo[playerNum].nitroTimer = 9.0f;
+    }
+    else if(gPlayerInfo[playerNum].place == 4){
+        gPlayerInfo[playerNum].nitroTimer = 12.0f;
+    }
+    else if(gPlayerInfo[playerNum].place == 5){
+        gPlayerInfo[playerNum].nitroTimer = 15.0f;
+    }
+    else if(gPlayerInfo[playerNum].place == 6){
+        gPlayerInfo[playerNum].nitroTimer = 20.0f;
+    }
+    else{
+        gPlayerInfo[playerNum].nitroTimer = NITRO_DURATION + RandomRange(2.0f,5.0f);
+    }
 
 	PlayEffect_Parms3D(EFFECT_NITRO, &gPlayerInfo[playerNum].coord, NORMAL_CHANNEL_RATE, 1.5);
 
@@ -189,7 +264,60 @@ static void PlayerThrowsWeapon(short playerNum, Boolean forwardThrow)
 	ObjNode* head = pinfo->headObj;
 
 	head->HEAD_THROW_READY_FLAG = false;
+    
+    bool unsafe = false;
 
+    if(pinfo[playerNum].vehicleType == CAR_TYPE_SUB){
+        if(_DEBUG){
+            printf("Unsafe action. Is this vehicle a sub? ");
+        }
+        unsafe = true;
+    }
+    
+    if(unsafe == false){
+        if ((head->Skeleton->AnimNum != PLAYER_ANIM_THROWFORWARD) && (head->Skeleton->AnimNum != PLAYER_ANIM_THROWBACKWARD))
+        {
+    #if _DEBUG
+            GAME_ASSERT(pinfo->powTypeBeingThrown == POW_TYPE_NONE);
+    #endif
+
+            if (forwardThrow)
+                MorphToSkeletonAnim(head->Skeleton, PLAYER_ANIM_THROWFORWARD, 8.0);
+            else
+                MorphToSkeletonAnim(head->Skeleton, PLAYER_ANIM_THROWBACKWARD, 8.0);
+
+            if (pinfo->sex)
+                PlayEffect_Parms3D(EFFECT_THROW1 + RandomRange(0,2), &gCoord, NORMAL_CHANNEL_RATE + 0x5000, 1.5);
+            else
+                PlayEffect_Parms3D(EFFECT_THROW1 + RandomRange(0,2), &gCoord, NORMAL_CHANNEL_RATE, 1.5);
+
+
+                /* REMEMBER POW TYPE UNTIL ANIM IS READY TO CREATE BULLET */
+
+            pinfo->powTypeBeingThrown = pinfo->powType;
+
+
+                /* DEC THE INVENTORY */
+
+            DecCurrentPOWQuantity(playerNum);
+        }
+    }
+    else{
+        if(pinfo->powTypeBeingThrown == POW_TYPE_NONE){
+            DecCurrentPOWQuantity(playerNum);
+        }
+        else if(pinfo->powTypeBeingThrown == POW_TYPE_OIL || pinfo->powTypeBeingThrown == POW_TYPE_BONE || pinfo->powTypeBeingThrown == POW_TYPE_FREEZE || pinfo->powTypeBeingThrown == POW_TYPE_BIRDBOMB){
+            //pinfo->powTypeBeingThrown = pinfo->powType;
+            pinfo->invisibilityTimer = 5.0f;
+            DecCurrentPOWQuantity(playerNum);
+        }
+        else{
+            pinfo->powTypeBeingThrown = pinfo->powType;
+            DecCurrentPOWQuantity(playerNum);
+        }
+    }
+    // old code replace if above replacement doesn't work
+    /**
 	if ((head->Skeleton->AnimNum != PLAYER_ANIM_THROWFORWARD) && (head->Skeleton->AnimNum != PLAYER_ANIM_THROWBACKWARD))
 	{
 #if _DEBUG
@@ -207,15 +335,16 @@ static void PlayerThrowsWeapon(short playerNum, Boolean forwardThrow)
 			PlayEffect_Parms3D(EFFECT_THROW1 + RandomRange(0,2), &gCoord, NORMAL_CHANNEL_RATE, 1.5);
 
 
-			/* REMEMBER POW TYPE UNTIL ANIM IS READY TO CREATE BULLET */
+			// REMEMBER POW TYPE UNTIL ANIM IS READY TO CREATE BULLET
 
 		pinfo->powTypeBeingThrown = pinfo->powType;
 
 
-			/* DEC THE INVENTORY */
+			// DEC THE INVENTORY
 
 		DecCurrentPOWQuantity(playerNum);
 	}
+    **/
 }
 
 
@@ -582,9 +711,9 @@ float	fps = gFramesPerSecondFrac;
 
 	GetObjectInfo(theNode);
 
-	ApplyFrictionToDeltas(fps * 500.0f, &gDelta);			// air friction
+	ApplyFrictionToDeltas(fps * 432.0f, &gDelta);			// air friction // was 500.0f
 
-	gDelta.y -= 1000.0f * fps;								// gravity
+	gDelta.y -= 700.0f * fps;	// was 1000.0f							// gravity
 
 	gCoord.x += gDelta.x * fps;								// move it
 	gCoord.y += gDelta.y * fps;
@@ -645,12 +774,14 @@ static void MoveOilSpill(ObjNode *theNode)
 float	fps = gFramesPerSecondFrac;
 int		i;
 float	s,left,right,front,back;
-
+    
 
 			/* SCALE OUT */
 
-	if (theNode->Scale.x < 10.0f)
-		theNode->Scale.x = theNode->Scale.z += fps * 1.5f;
+	if (theNode->Scale.x < 25.0f) // was 10.0f
+		theNode->Scale.x = theNode->Scale.z += fps * 2.35f; // was 1.5f
+    
+    
 	s = theNode->Scale.x;
 	RotateOnTerrain(theNode, 5.0, nil);							// set transform matrix
 	SetObjectTransformMatrix(theNode);
@@ -727,7 +858,7 @@ short		p,bestP;
 	NewObjectDefinitionType def =
 	{
 		.moveCall 	= MoveBirdBomb,
-		.type 		= SKELETON_TYPE_BIRDBOMB,
+		.type 		= SKELETON_TYPE_BIRDBOMB, //JUNGLE_ObjType_EasterHead //SKELETON_TYPE_BIRDBOMB
 		.animNum 	= 0,
 		.flags 		= STATUS_BIT_NOLIGHTING,
 		.slot 		= SLOT_OF_DUMB+3,
@@ -740,8 +871,8 @@ short		p,bestP;
 	if (newObj == nil)
 		DoFatalAlert("ThrowBirdBomb: MakeNewSkeletonObject failed!");
 
-	newObj->Skeleton->AnimSpeed = 2.0f;
-	newObj->Delta.y = car->Delta.y + 600.0f;
+	newObj->Skeleton->AnimSpeed = 1.25f + (RandomFloat() * 2.1f); // was 2.0f
+	newObj->Delta.y = car->Delta.y + 2400.0f; //was 600.0f;
 
 			/* MAKE SHADOW */
 
@@ -1549,9 +1680,12 @@ static const OGLPoint3D	nose = {0,0,-100};
 	newObj->Rot = car->Rot;																// match rotation
 
 
-
-	PlayEffect_Parms3D(EFFECT_TORPEDOFIRE, &def.coord, NORMAL_CHANNEL_RATE, 3);
-
+    if(gTrackNum == TRACK_NUM_ATLANTIS){
+        PlayEffect_Parms3D(EFFECT_TORPEDOFIRE, &def.coord, NORMAL_CHANNEL_RATE, 3);
+    }
+    else{
+        PlayEffect_Parms3D(EFFECT_OHYEAH, &def.coord, NORMAL_CHANNEL_RATE, 3);
+    }
 }
 
 
@@ -1667,12 +1801,12 @@ boom:
 			/************************/
 			/* UPDATE TORPEDO EFFECT */
 			/************************/
-
-	if (theNode->EffectChannel != -1)
-		Update3DSoundChannel(EFFECT_HUM, &theNode->EffectChannel, &gCoord);
-	else
-		theNode->EffectChannel = PlayEffect_Parms3D(EFFECT_HUM, &gCoord, NORMAL_CHANNEL_RATE + 0x2000, 1.0);
-
+    if(gTrackNum == TRACK_NUM_ATLANTIS){
+        if (theNode->EffectChannel != -1)
+            Update3DSoundChannel(EFFECT_HUM, &theNode->EffectChannel, &gCoord);
+        else
+            theNode->EffectChannel = PlayEffect_Parms3D(EFFECT_HUM, &gCoord, NORMAL_CHANNEL_RATE + 0x2000, 1.0);
+    }
 }
 
 
