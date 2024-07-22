@@ -2,6 +2,9 @@
 // (C) 2022 Iliyas Jorio
 // This file is part of Cro-MagRally. https://github.com/jorio/cromagrally
 
+// 2024 Modded CMR Game by rk8 (codename). this is a derivative of an original work under the CC A-NC-SA 4.0 IPL.
+// Internal info about code: Some C files have been either changed a lot or a little. Look around to see the new stuff and new additional data that makes it possible! There are some C+ files here and there that were already included, and not added by this mod. Some commented out code is original while others are unused tests or features from the official version of the port which are unused, like Internet features or special params for rendering and such.
+
 #include <SDL.h>
 #include "Pomme.h"
 #include "PommeInit.h"
@@ -40,6 +43,8 @@ static fs::path FindGameData(const char* executablePath)
 #if !(__APPLE__)
 	attemptNum++;		// skip macOS special case #0
 #endif
+    
+    printf(" Finding startup data... \n");
 
 	if (!executablePath)
 		attemptNum = 2;
@@ -151,6 +156,8 @@ static void GetInitialWindowSize(int display, int& width, int& height)
 
 static void Boot(int argc, char** argv)
 {
+    printf("Starting up... \n");
+    
 	const char* executablePath = argc > 0 ? argv[0] : NULL;
 
 	ParseCommandLine(argc, argv);
@@ -288,3 +295,4 @@ int main(int argc, char** argv)
 
 	return returnCode;
 }
+
