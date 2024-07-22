@@ -115,6 +115,7 @@ float				y;
 	x += TERRAIN_POLYGON_SIZE/2;
 	z -= (int)z % (int)TERRAIN_POLYGON_SIZE;
 	z += TERRAIN_POLYGON_SIZE/2;
+    
 
 	if (itemPtr->parm[3] & 1)						// see if use fixed height
 	{
@@ -138,10 +139,10 @@ float				y;
 		.group		= MODEL_GROUP_GLOBAL,
 		.type 		= GLOBAL_ObjType_WaterPatch,
 		.coord		= {x, y, z},
-		.flags 		= gAutoFadeStatusBits | STATUS_BIT_NOLIGHTING | STATUS_BIT_KEEPBACKFACES,
+		.flags 		= gAutoFadeStatusBits | STATUS_BIT_KEEPBACKFACES, //had |STATUS_BIT_NOLIGHTING
 		.slot 		= SLOT_OF_DUMB-2,
 		.moveCall 	= MoveWaterPatch,
-		.scale 		= 1.0,
+		.scale 		= 2.0, // was 1.0
 	};
 	newObj = MakeNewDisplayGroupObject(&def);
 	if (newObj == nil)
@@ -179,12 +180,46 @@ float				y;
 
 static void MoveWaterPatch(ObjNode *theNode)
 {
-	if (TrackTerrainItem(theNode))						// just check to see if it's gone
+	if (TrackTerrainItem(theNode))
 	{
 		DeleteObject(theNode);
 		return;
 	}
+    
+    // not really working but still plausible
+    /**
+    float fractionalFps = gFramesPerSecondFrac * 2.0f;
+    float newCoordY = 0.0f;
+    
+    float waterHeightLvlPatch = GetTerrainY(gCoord.x,gCoord.z) + 100.0f;
+    float waterHeightLvlPatchMax = waterHeightLvlPatch + 72.0f;
+    
+    if(theNode->Coord.y <= waterHeightLvlPatch){
+        newCoordY = theNode->Coord.y + 15.0f;
+    }
+    else if(theNode->Coord.y >= waterHeightLvlPatchMax){
+        newCoordY = theNode->Coord.y - 15.0f;
+    }
+    
+    theNode->Coord.y = (theNode->Coord.y + fractionalFps * (newCoordY - theNode->Coord.y));
+    UpdateObjectTransforms(theNode);
+    **/
 }
+
+//a + f * (b - a);
+//float val = firstVal + partialNum * (secondVal - firstVal);
+
+// modded water patch replaced old one
+/** old water patch
+ static void MoveWaterPatch(ObjNode *theNode)
+ {
+     if (TrackTerrainItem(theNode))                        // just check to see if it's gone
+     {
+         DeleteObject(theNode);
+         return;
+     }
+ }
+ */
 
 
 /**************** UPDATE WATER TEXTURE ANIMATION ********************/
@@ -251,7 +286,7 @@ float				scale,rot;
 		.group		= MODEL_GROUP_LEVELSPECIFIC,
 		.type 		= JUNGLE_ObjType_Waterfall,
 		.coord		= {x, GetTerrainY(x, z), z},
-		.flags 		= gAutoFadeStatusBits | STATUS_BIT_NOLIGHTING | STATUS_BIT_KEEPBACKFACES,
+		.flags 		= gAutoFadeStatusBits | STATUS_BIT_KEEPBACKFACES, //had |STATUS_BIT_NOLIGHTING
 		.slot 		= SLOT_OF_DUMB+20,
 		.moveCall 	= MoveWaterfall,
 		.rot 		= rot,
@@ -335,11 +370,16 @@ float				y;
 		.group		= MODEL_GROUP_LEVELSPECIFIC,
 		.type 		= TAR_ObjType_TarPatch,
 		.coord		= {x, y, z},
-		.flags 		= gAutoFadeStatusBits | STATUS_BIT_NOLIGHTING | STATUS_BIT_KEEPBACKFACES,
+		.flags 		= gAutoFadeStatusBits | STATUS_BIT_KEEPBACKFACES, // had |STATUS_BIT_NOLIGHTING
 		.slot 		= 77,
 		.moveCall 	= MoveStaticObject,
 		.scale 		= 1.0 + (float)(itemPtr->parm[0]) * .5f
 	};
+    
+    // tar patch patches (still needs work)
+    def.scale *= 12.95f; // make tar patches cover more space
+    def.coord.y -= 275.05; // lower them a bit to reduce 'bleeding' into next terrain area
+    
 	newObj = MakeNewDisplayGroupObject(&def);
 	if (newObj == nil)
 		return(false);
