@@ -59,8 +59,8 @@ static void MoveTroll(ObjNode *theNode);
 #define	SHARK_YOFF		5000.0f
 #define	SHARK_SCALE		25.0f
 
-#define	GODDESS_SPARK_TIMER	.02f
-#define	MAX_BOLT_ENDPOINTS	20
+#define	GODDESS_SPARK_TIMER	.01f // .02f
+#define	MAX_BOLT_ENDPOINTS	20 // 20
 
 #define	CAPSULE_SPARK_TIMER	.02f
 
@@ -651,6 +651,8 @@ float		dist;
 		DeleteObject(theNode);
 		return;
 	}
+    
+    theNode->Skeleton->AnimSpeed = RandomFloat() * 1.52f;
 
 
 	switch(skeleton->AnimNum)
@@ -698,7 +700,7 @@ float			speed;
 
 	FindCoordOnJointAtFlagEvent(theNode, 7, &tipOff, &tipCoord);
 
-	for (int i = 0; i < 3; i++)				// throw 3 rocks
+	for (int i = 0; i < 11; i++)				// was 3 rocks
 	{
 		NewObjectDefinitionType def =
 		{
@@ -709,7 +711,7 @@ float			speed;
 			.slot		= SLOT_OF_DUMB+2,
 			.moveCall	= MoveCatapultRock,
 			.rot		= 0,
-			.scale		= .13,
+			.scale		= .11, // .13
 		};
 		newObj = MakeNewDisplayGroupObject(&def);
 		if (newObj == nil)
@@ -725,7 +727,7 @@ float			speed;
 			/* SET IN MOTION */
 			/*****************/
 
-		speed = 8000.0f + RandomFloat() * 1000.0f;
+		speed = 10000.0f + RandomFloat() * 3000.0f; // was 8000.0f + RandomFloat() * 1000.0f
 
 		OGLMatrix4x4_SetRotate_Y(&m, theNode->Rot.y + (RandomFloat2() * .3f));
 		OGLVector3D_Transform(&throwVector,	&m, &newObj->Delta);
@@ -844,6 +846,8 @@ short	p;
 		if ((particleGroup == -1) || (!VerifyParticleGroupMagicNum(particleGroup, magicNum)))
 		{
 			NewParticleGroupDefType	groupDef;
+            
+            int bs = (RandomFloat() * 20.0); // modified to allow some random scaling
 
 			theNode->ParticleMagicNum = magicNum = MyRandomLong();			// generate a random magic num
 
@@ -852,7 +856,7 @@ short	p;
 			groupDef.flags					= 0;
 			groupDef.gravity				= 0;
 			groupDef.magnetism				= 0;
-			groupDef.baseScale				= 20;
+            groupDef.baseScale				= bs; // 20
 			groupDef.decayRate				=  .5;
 			groupDef.fadeRate				= 1.0;
 			groupDef.particleTextureNum		= PARTICLE_SObjType_GreenFire;
@@ -1120,7 +1124,7 @@ float	dist;
 			p = FindClosestPlayerInFront(theNode, 16000, true, &dist, .7);
 			if (p != -1)
 			{
-				theNode->ShootTimer = 2.0;												// delay until can shoot again
+				theNode->ShootTimer = 1.25; // delay was 2.0
 				ShootCannon(theNode, dist);
 			}
 		}
@@ -1187,7 +1191,7 @@ NewParticleDefType		newParticleDef;
 	if (dist < 5000.0f)
 		dist = 5000.0;
 
-	speed = dist * .9f;
+	speed = dist * .9f + (RandomFloat() * 1.25f); // added extra speed boost of randomness
 
 	OGLMatrix4x4_SetRotate_Y(&m2, theNode->Rot.y + (RandomFloat2() * .1f));
 	OGLVector3D_Transform(&throwVector,	&m2, &delta);
@@ -1847,8 +1851,12 @@ ObjNode	*newObj;
 		.slot 		= SLOT_OF_DUMB+2,
 		.moveCall 	= MoveDragon,
 		.rot 		= PI2 * ((float)itemPtr->parm[0] * (1.0f/8.0f)),
-		.scale 		= 20.0,
+		.scale 		= 32.0, // was 20.0
 	};
+    
+    
+    def.coord.y += 4572.0f;
+    
 	newObj = MakeNewSkeletonObject(&def);
 	if (newObj == nil)
 		return(false);
@@ -1862,7 +1870,6 @@ ObjNode	*newObj;
 }
 
 
-
 /************************ MOVE DRAGON *****************************/
 
 static void MoveDragon(ObjNode *theNode)
@@ -1872,6 +1879,20 @@ static void MoveDragon(ObjNode *theNode)
 		DeleteObject(theNode);
 		return;
 	}
+    
+    // fancy turn dragon towards nearest player (not working)
+    /*
+    float dist = 0;
+    
+    for(int check = 0; check < gNumTotalPlayers; check++){
+        dist = CalcDistance(gPlayerInfo[check].coord.x, gPlayerInfo[check].coord.z, theNode->Coord.x, theNode->Coord.z);
+        if(dist < 1200){
+            TurnObjectTowardTarget(theNode, &gCoord, gPlayerInfo[check].coord.x, gPlayerInfo[check].coord.z, PI2, false);
+            UpdateObjectTransforms(theNode);
+            break;
+        }
+    }
+     */
 
 		/* SEE IF BREATH FIRE */
 
