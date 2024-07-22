@@ -24,7 +24,7 @@ Since we're working with C, some things aren't possible without extra libraries 
 - Terrain is coord stretched horizontally (not vertically to not ruin the vertical stretch physics feature), and CPUs can drive on it no problem. The track is now wider and longer.
 - Nitro now boosts you more if your in a Submarine on a non-Atlantis track, and Sticky Tires/Super Suspension give you a tiny boost of speed (non-nitro speed, depending on the number of seconds shown).
 - Some previously static objects now dance or move to make the scene a little more active, but not too distracting. For example, the trees now stretch up and down smoothly to look like they are moving in the wind.
-- Arrowheads appear in practice and tournament mode. In practice mode, arrowheads give you items depending on RNG (for now, no RNG exists and only the zapper, which is given to players only).
+- Arrowheads appear in practice *and* tournament mode. In practice mode, arrowheads give you items depending on RNG (for now, no RNG exists and only the zapper, which is given to players only).
 
 ## Here's a list of the brand new features:
 - Zapped Player State (has no proper icon yet); when zapped, you will turn small and move much slower than your usual speed. When the timer runs out, you will regain your original speed and size.
