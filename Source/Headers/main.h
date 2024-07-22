@@ -4,7 +4,7 @@
 
 #pragma once
 
-#define	MAX_PLAYERS			6
+#define	MAX_PLAYERS			6 // 6 players for stability, or more for experiments
 #define	MAX_LOCAL_PLAYERS	4
 
 #define	GAME_FOV		1.1f
@@ -42,8 +42,8 @@ enum
 
 #define	TRACKS_PER_AGE	3			// # tracks per age in tournament mode
 
-#define LAPS_PER_RACE	3
-#define MAX_RECORDS_PER_TRACK	10
+#define LAPS_PER_RACE	3 // 3
+#define MAX_RECORDS_PER_TRACK	10 // 10
 
 enum
 {
