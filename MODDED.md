@@ -29,8 +29,8 @@ Since we're working with C, some things aren't possible without extra libraries 
 - Zapped Player State (has no proper icon yet); when zapped, you will turn small and move much slower than your usual speed. When the timer runs out, you will regain your original speed and size.
 - Night Mode (WIP); selected tracks will have a night time/sunset lighting and coloring option (and sometimes level changes to objects). The skybox, terrain and objects will be shaded and have an alternative appearance (it is currently working but is not synced nor is 'night' in the sense of lighting/dark shadows, as the custom C code and the OpenGL-like system doesn't have good support for dynamic lights, that are needed for full effect, and such).
 - Fog is enabled in particular levels depending on how good fog looks in the level (was disabled entirely in the whole game)
-- Fast Music on Lap 3+ (will change if others are in 3rd lap as well)
-- Completed race music (will use title theme but altered a bit, WIP)
+- Fast Music on Lap 3+ (won't change if CPUs are in 3rd lap)
+- Completed race music (uses title theme but altered a bit)
 - Zapper Item (collected only from Arrowheads in non-tournament modes) (zaps only players/CPUs who did not fire the zapper for 5 seconds, if user who fired zapper is already zapped, their zapper timer will be reset to 0)
 
 # List Of Potential Fixes/Technical Changes:
