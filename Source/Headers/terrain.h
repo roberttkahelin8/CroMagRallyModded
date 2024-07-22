@@ -24,11 +24,16 @@ enum
 #define	OREOMAP_TILE_SIZE			16 												// pixel w/h of texture tile
 #define TILE_DATA_SIZE16			(OREOMAP_TILE_SIZE*OREOMAP_TILE_SIZE*2)
 
-#define	TERRAIN_POLYGON_SIZE		800.0f 											// size in world units of terrain polygon
+#define	TERRAIN_POLYGON_SIZE		1600.0f 											// size in world units of terrain polygon
+// was 800.0f
+
 
 #define	TERRAIN_POLYGON_SIZE_Frac	((float)1.0f/(float)TERRAIN_POLYGON_SIZE)
 
 #define	SUPERTILE_SIZE				8  												// size of a super-tile / terrain object zone
+
+
+
 
 #define	NUM_TRIS_IN_SUPERTILE		(SUPERTILE_SIZE * SUPERTILE_SIZE * 2)			// 2 triangles per tile
 #define	NUM_VERTICES_IN_SUPERTILE	((SUPERTILE_SIZE+1)*(SUPERTILE_SIZE+1))			// # vertices in a supertile
