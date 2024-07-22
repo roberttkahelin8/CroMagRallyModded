@@ -306,3 +306,9 @@ void SetFullscreenMode(bool enforceDisplayPref)
 
 	SDL_ShowCursor(gGamePrefs.fullscreen ? 0 : 1);
 }
+
+void SetNightMode(){
+    if(gGamePrefs.nightMode){
+        //?
+    }
+}
