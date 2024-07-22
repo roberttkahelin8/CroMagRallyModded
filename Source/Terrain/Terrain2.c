@@ -43,7 +43,7 @@ SuperTileItemIndexType	**gSuperTileItemIndexGrid = nil;
 /*     TABLES         */
 /**********************/
 
-#define	MAX_ITEM_NUM	66					// for error checking!
+#define	MAX_ITEM_NUM	100					// for error checking! // was 66
 
 static Boolean (*gTerrainItemAddRoutines[MAX_ITEM_NUM+1])(TerrainItemEntryType *itemPtr, long x, long z) =
 {
@@ -114,6 +114,40 @@ static Boolean (*gTerrainItemAddRoutines[MAX_ITEM_NUM+1])(TerrainItemEntryType *
 		NilAdd,								// 64 Polar Bear - spline
 		AddFlower,							// 65 flower
 		NilAdd,								// 66 Viking - spline
+        NilAdd,//67
+        NilAdd,//68
+        NilAdd,//69
+        NilAdd,//70
+        NilAdd,//71
+        NilAdd,//72
+        NilAdd,//73
+        NilAdd,//74
+        NilAdd,//75
+        NilAdd,//76
+        NilAdd,//77
+        NilAdd,//78
+        NilAdd,//79
+        NilAdd,//80
+    NilAdd,//81
+    NilAdd,//82
+    NilAdd,//83
+    NilAdd,//84
+    NilAdd,//85
+    NilAdd,//86
+    NilAdd,//87
+    NilAdd,//88
+    NilAdd,//89
+    NilAdd,//90
+    NilAdd,//91
+    NilAdd,//92
+    NilAdd,//93
+    NilAdd,//94
+    NilAdd,//95
+    NilAdd,//96
+    NilAdd,//97
+    NilAdd,//98
+    NilAdd,//99
+    NilAdd,//100
 };
 
 
@@ -264,12 +298,13 @@ Boolean                 flags[MAX_PLAYERS];
 	}
 }
 
-
 /****************** ADD TERRAIN ITEMS ON SUPERTILE *******************/
 //
 // Called by DoPlayerTerrainUpdate() per each supertile needed.
 // This scans all of the items on this supertile and attempts to add them.
 //
+
+bool showAddTerrainDebugInfo = false; // shows item positions and number of items on each supertile in their columns and rows
 
 void AddTerrainItemsOnSuperTile(long row, long col, short playerNum)
 {
@@ -281,6 +316,12 @@ Boolean			flag;
 	numItems = gSuperTileItemIndexGrid[row][col].numItems;		// see how many items are on this supertile
 	if (numItems == 0)
 		return;
+    
+    if(_DEBUG && showAddTerrainDebugInfo == true){
+        if(numItems > 0){
+            printf(" Num Of Items On Supertile: %lu , at Row: %lu, at Column: %lu. \n",numItems,row,col);
+        }
+    }
 
 	startIndex = gSuperTileItemIndexGrid[row][col].itemIndex;	// get starting index into item list
 	itemPtr = &(*gMasterItemList)[startIndex];					// get pointer to 1st item on this supertile
@@ -298,21 +339,39 @@ Boolean			flag;
 			continue;
 
 		x = itemPtr[i].x;										// get item coords
-		z = itemPtr[i].y;
-
+        z = itemPtr[i].y;
+        
 		if (!SeeIfCoordsOutOfRange(x,z,playerNum))				// if is in range of another player, then cannot add since this means item got reinstated while still in range of others
 			continue;
 
 		type = itemPtr[i].type;									// get item #
+        
 		if (type > MAX_ITEM_NUM)								// error check!
 		{
 			DoAlert("Illegal Map Item Type!");
 			ShowSystemErr(type);
 		}
-
+        
+        if(_DEBUG && showAddTerrainDebugInfo == true){
+            //printf("\n Item Pointer: %*u",itemPtr[i]);
+            if(type == 0){
+                printf("ITEM POINTER AT: %lu => ObjAdd Type: START_COORD, ref-to: NilAdd(), X: %.5f  Y: %.5f \n",i,x,z);
+            }
+            else if(type == 4){
+                printf("ITEM POINTER AT: %lu => ObjAdd Type: TREE, ref-to: AddTree(), X: %.5f  Y: %.5f \n",i,x,z);
+            }
+            else if(type == 5){
+                printf("ITEM POINTER AT: %lu => ObjAdd Type: POWERUP, ref-to: AddPOW(), X: %.5f  Y: %.5f \n",i,x,z);
+            }
+            else{
+                printf("ITEM POINTER AT: %lu => ObjAdd Type: %lu, X: %.5f  Y: %.5f \n",i,type,x,z);
+            }
+        }
+        
 		flag = gTerrainItemAddRoutines[type](&itemPtr[i],itemPtr[i].x, itemPtr[i].y); // call item's ADD routine
 		if (flag)
 			itemPtr[i].flags |= ITEM_FLAGS_INUSE;				// set in-use flag
+        
 	}
 }
 
