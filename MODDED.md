@@ -51,5 +51,5 @@ Since we're working with C, some things aren't possible without extra libraries 
 - Support for more compressed/alternative formats (game supports PNGs/JPGS for sprites/screen bgs, and AIFFs for all sfx and music already, which is good, perhaps expand this support to other formats/find out what formats are in BG3D files for their textures natively? (TGAs were the converted texture format using python scripts)).
 
 Note:
-If you want to help make the mod better, please report anything related to: "Bad Races, Difficulty changes, Options Within Bounds Of OpenGL For C", "Bugs/Crashes", "Strange behaviors".
+Right now, this mod is on indefinite hold, as it is good enough.
 **Do not report mod suggestions/issues/bugs to the original GitHub that Jorio has made, as that port is for official changes only, which may propagate if they add features or fix critical issues, or optimize the game more.**
